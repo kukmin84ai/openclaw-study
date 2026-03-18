@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw 시스템 가이드 — 플러그인 & 설정</title>
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f8f9fc;--card:#fff;--accent:#6c63ff;--accent2:#43b88c;
+  --accent3:#f0a030;--accent4:#e85d75;--text:#2d3142;--muted:#8b8fa8;
+  --border:#e4e6ef;--radius:14px;--shadow:0 2px 12px rgba(0,0,0,.06);
+}
+body{font-family:'Pretendard',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+nav{
+  position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:6px;padding:12px 20px;
+  flex-wrap:wrap;
+}
+nav a{
+  text-decoration:none;color:var(--muted);font-size:.9rem;font-weight:600;
+  padding:6px 14px;border-radius:8px;transition:.2s;
+}
+nav a:hover{background:#eef;color:var(--accent)}
+nav a.current{background:var(--accent);color:#fff}
+nav .logo{font-weight:800;font-size:1.05rem;color:var(--text);margin-right:auto}
+.container{max-width:880px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:1.6rem;font-weight:800;margin-bottom:8px}
+.subtitle{color:var(--muted);margin-bottom:32px;font-size:.95rem}
+details{
+  background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);margin-bottom:24px;overflow:hidden;
+  border:1px solid var(--border);
+}
+summary{
+  padding:20px 24px;font-size:1.15rem;font-weight:700;cursor:pointer;
+  list-style:none;display:flex;align-items:center;gap:12px;
+  transition:background .2s;
+}
+summary::-webkit-details-marker{display:none}
+summary::before{
+  content:'';display:inline-block;width:8px;height:8px;
+  border-right:2.5px solid var(--accent);border-bottom:2.5px solid var(--accent);
+  transform:rotate(-45deg);transition:transform .25s;flex-shrink:0;
+}
+details[open]>summary::before{transform:rotate(45deg)}
+summary:hover{background:#fafaff}
+.lesson-body{padding:0 24px 24px}
+.analogy{
+  background:linear-gradient(135deg,#f0edff,#e8f4ff);
+  border-radius:10px;padding:16px 20px;margin:16px 0;
+  border-left:4px solid var(--accent);font-size:.93rem;
+}
+.analogy strong{color:var(--accent)}
+.why-box{
+  background:#fffbe6;border-radius:10px;padding:16px 20px;margin:20px 0;
+  border-left:4px solid var(--accent3);font-size:.9rem;
+}
+.why-box h4{color:var(--accent3);margin-bottom:6px}
+
+/* Progress bar */
+.progress-bar{
+  display:flex;gap:4px;margin:20px 0 8px;position:relative;
+}
+.progress-bar .step{
+  flex:1;height:6px;background:var(--border);border-radius:3px;
+  transition:background .5s;
+}
+.progress-bar .step.active{background:var(--accent)}
+.progress-bar .step.done{background:var(--accent2)}
+
+/* Phase cards */
+.phases{display:flex;flex-direction:column;gap:16px;margin:16px 0}
+.phase-card{
+  border:2px solid var(--border);border-radius:12px;
+  overflow:hidden;cursor:pointer;transition:.3s;
+}
+.phase-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.phase-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,.15)}
+.phase-header{
+  display:flex;align-items:center;gap:12px;padding:14px 18px;
+  background:#fafaff;font-weight:700;font-size:.95rem;
+}
+.phase-num{
+  width:32px;height:32px;border-radius:50%;background:var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;color:#fff;font-weight:800;transition:background .4s;
+}
+.phase-card.active .phase-num,.phase-card.done .phase-num{background:var(--accent)}
+.phase-card.done .phase-num{background:var(--accent2)}
+.phase-detail{
+  max-height:0;overflow:hidden;transition:max-height .4s ease;
+  padding:0 18px;
+}
+.phase-card.active .phase-detail{max-height:600px;padding:0 18px 18px}
+.phase-detail p{font-size:.88rem;color:#555;margin:4px 0}
+.phase-detail code{
+  background:#f0edff;padding:2px 6px;border-radius:4px;
+  font-size:.82rem;font-family:'Pretendard',monospace;
+}
+.phase-detail .func-list{
+  display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;
+}
+.phase-detail .func-list span{
+  background:#e8f8f0;color:#2a7a5a;padding:3px 10px;border-radius:6px;
+  font-size:.78rem;font-weight:600;
+}
+
+/* SVG area */
+.svg-area{
+  display:flex;justify-content:center;align-items:center;
+  min-height:140px;margin:12px 0;
+}
+.svg-area svg{max-width:100%;height:auto}
+
+/* Pipeline */
+.pipeline{
+  display:flex;gap:0;margin:20px 0;overflow-x:auto;padding-bottom:8px;
+}
+.pipe-stage{
+  flex:1;min-width:160px;text-align:center;position:relative;
+  cursor:pointer;transition:.3s;
+}
+.pipe-stage:not(:last-child)::after{
+  content:'';position:absolute;top:40px;right:-12px;
+  width:24px;height:3px;background:var(--border);z-index:1;
+}
+.pipe-stage.active:not(:last-child)::after{background:var(--accent)}
+.pipe-icon{
+  width:64px;height:64px;margin:0 auto 8px;border-radius:50%;
+  background:#f0edff;display:flex;align-items:center;justify-content:center;
+  transition:.3s;border:3px solid transparent;
+}
+.pipe-stage.active .pipe-icon{border-color:var(--accent);background:#e8e4ff;transform:scale(1.08)}
+.pipe-stage .label{font-size:.82rem;font-weight:700;color:var(--muted);transition:.2s}
+.pipe-stage.active .label{color:var(--accent)}
+.pipe-stage .sublabel{font-size:.75rem;color:var(--muted)}
+.pipe-detail-area{
+  background:#fafaff;border-radius:10px;padding:18px;margin:12px 0;
+  min-height:80px;font-size:.88rem;border:1px solid var(--border);
+  transition:all .3s;
+}
+
+/* Interactive config demo */
+.config-demo{
+  background:#f8f7ff;border-radius:12px;padding:20px;margin:16px 0;
+  border:1px solid var(--border);
+}
+.config-demo h4{font-size:.92rem;margin-bottom:12px}
+.source-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.source-btns button{
+  padding:8px 16px;border:2px solid var(--border);border-radius:8px;
+  background:#fff;font-family:inherit;font-size:.82rem;font-weight:600;
+  cursor:pointer;transition:.2s;
+}
+.source-btns button:hover{border-color:var(--accent);background:#f0edff}
+.source-btns button.chosen{border-color:var(--accent2);background:#e8f8f0;color:#2a7a5a}
+.flow-log{
+  background:#1e1e2e;color:#cdd6f4;border-radius:8px;padding:14px;
+  font-family:'Pretendard',monospace;font-size:.78rem;
+  min-height:60px;max-height:200px;overflow-y:auto;
+  line-height:1.8;
+}
+.flow-log .ok{color:#a6e3a1}
+.flow-log .warn{color:#f9e2af}
+.flow-log .err{color:#f38ba8}
+.flow-log .info{color:#89b4fa}
+
+/* Btn */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:10px 20px;border:none;border-radius:8px;
+  background:var(--accent);color:#fff;font-family:inherit;
+  font-size:.88rem;font-weight:700;cursor:pointer;transition:.2s;
+  margin:8px 4px 8px 0;
+}
+.btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn.secondary{background:#e8e4ff;color:var(--accent)}
+
+/* Animations */
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes slideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes scan{0%{transform:translateX(-20px);opacity:.3}50%{opacity:1}100%{transform:translateX(20px);opacity:.3}}
+@keyframes bookOpen{0%{transform:rotateY(-90deg)}100%{transform:rotateY(0deg)}}
+@keyframes snap{0%{transform:translateY(-20px);opacity:0}70%{transform:translateY(3px)}100%{transform:translateY(0);opacity:1}}
+@keyframes gear{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.animate-in{animation:slideIn .4s ease}
+.pulse{animation:pulse .8s ease}
+
+/* Responsive */
+@media(max-width:600px){
+  nav{padding:10px 12px}
+  nav a{font-size:.78rem;padding:5px 10px}
+  .container{padding:16px 10px 40px}
+  h1{font-size:1.3rem}
+  summary{font-size:1rem;padding:16px}
+  .lesson-body{padding:0 16px 16px}
+  .pipeline{flex-direction:column;align-items:center}
+  .pipe-stage:not(:last-child)::after{display:none}
+  .phase-header{font-size:.88rem}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="logo">OpenClaw</span>
+  <a href="index.html">지도</a>
+  <a href="message-flow.html">흐름</a>
+  <a href="systems.html" class="current">시스템</a>
+</nav>
+
+<div class="container">
+  <h1>시스템 깊이 보기</h1>
+  <p class="subtitle">플러그인이 어떻게 살아나고, 설정이 어떻게 완성되는지 알아봅시다.</p>
+
+  <!-- ===================== LESSON 3 ===================== -->
+  <details open id="lesson3">
+    <summary>레슨 3: 플러그인 시스템 (Plugin Lifecycle)</summary>
+    <div class="lesson-body animate-in">
+
+      <div class="analogy">
+        <strong>비유: 레고 블록</strong><br>
+        플러그인은 레고 블록과 같아요.<br>
+        <strong>발견</strong>(상자에서 블록 찾기) →
+        <strong>로딩</strong>(설명서 읽기) →
+        <strong>등록</strong>(조립판에 꽂기) →
+        <strong>실행</strong>(놀기!) 순서로 진행됩니다.
+      </div>
+
+      <!-- Progress bar -->
+      <div class="progress-bar" id="pluginProgress">
+        <div class="step active" data-phase="0"></div>
+        <div class="step" data-phase="1"></div>
+        <div class="step" data-phase="2"></div>
+        <div class="step" data-phase="3"></div>
+      </div>
+
+      <!-- Phase cards -->
+      <div class="phases" id="pluginPhases">
+
+        <!-- Phase 1 -->
+        <div class="phase-card active" data-idx="0" onclick="selectPhase(0)">
+          <div class="phase-header">
+            <div class="phase-num">1</div>
+            발견 (Discovery)
+          </div>
+          <div class="phase-detail">
+            <div class="svg-area" id="svg-discovery">
+              <svg viewBox="0 0 320 120" width="320" height="120">
+                <rect x="10" y="20" width="70" height="80" rx="8" fill="#ede9fe" stroke="#c4b5fd" stroke-width="2"/>
+                <text x="45" y="55" text-anchor="middle" font-size="9" fill="#6c63ff" font-weight="700">~/.openclaw/</text>
+                <text x="45" y="70" text-anchor="middle" font-size="8" fill="#8b8fa8">extensions/</text>
+                <rect x="100" y="20" width="70" height="80" rx="8" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="2"/>
+                <text x="135" y="55" text-anchor="middle" font-size="9" fill="#0284c7" font-weight="700">node_modules/</text>
+                <text x="135" y="70" text-anchor="middle" font-size="8" fill="#8b8fa8">workspace</text>
+                <rect x="190" y="20" width="70" height="80" rx="8" fill="#dcfce7" stroke="#86efac" stroke-width="2"/>
+                <text x="225" y="55" text-anchor="middle" font-size="9" fill="#16a34a" font-weight="700">내장 플러그인</text>
+                <text x="225" y="70" text-anchor="middle" font-size="8" fill="#8b8fa8">stock</text>
+                <!-- magnifying glass -->
+                <circle id="magGlass" cx="280" cy="60" r="16" fill="none" stroke="#6c63ff" stroke-width="3" opacity=".7">
+                  <animate attributeName="cx" values="280;50;140;230;280" dur="3s" repeatCount="indefinite"/>
+                </circle>
+                <line x1="292" y1="72" x2="305" y2="85" stroke="#6c63ff" stroke-width="3" stroke-linecap="round" opacity=".7">
+                  <animate attributeName="x1" values="292;62;152;242;292" dur="3s" repeatCount="indefinite"/>
+                  <animate attributeName="y1" values="72;72;72;72;72" dur="3s" repeatCount="indefinite"/>
+                  <animate attributeName="x2" values="305;75;165;255;305" dur="3s" repeatCount="indefinite"/>
+                </line>
+              </svg>
+            </div>
+            <p><code>resolvePluginSourceRoots()</code>가 3곳을 탐색합니다:</p>
+            <p>1. <code>~/.openclaw/extensions/</code> — 사용자가 직접 설치한 확장</p>
+            <p>2. 워크스페이스 <code>node_modules/</code> — 프로젝트에 포함된 패키지</p>
+            <p>3. 내장 스톡 플러그인 — OpenClaw에 기본 포함</p>
+            <p>각 폴더에서 <code>package.json</code>에 <code>openclaw</code> 매니페스트가 있는지 확인하고, 발견하면 <code>PluginCandidate[]</code> 배열에 담습니다.</p>
+          </div>
+        </div>
+
+        <!-- Phase 2 -->
+        <div class="phase-card" data-idx="1" onclick="selectPhase(1)">
+          <div class="phase-header">
+            <div class="phase-num">2</div>
+            로딩 (Loading)
+          </div>
+          <div class="phase-detail">
+            <div class="svg-area">
+              <svg viewBox="0 0 240 120" width="240" height="120">
+                <g transform="translate(120,60)">
+                  <!-- book -->
+                  <rect x="-50" y="-35" width="50" height="70" rx="4" fill="#ddd6fe" stroke="#a78bfa" stroke-width="2"/>
+                  <rect x="0" y="-35" width="50" height="70" rx="4" fill="#ede9fe" stroke="#a78bfa" stroke-width="2">
+                    <animateTransform attributeName="transform" type="rotate" values="0 0 0;-30 0 0;0 0 0" dur="2s" repeatCount="indefinite"/>
+                  </rect>
+                  <line x1="0" y1="-35" x2="0" y2="35" stroke="#a78bfa" stroke-width="2"/>
+                  <text x="0" y="52" text-anchor="middle" font-size="10" fill="#6c63ff" font-weight="700">설명서 읽는 중...</text>
+                </g>
+              </svg>
+            </div>
+            <p><code>normalizePluginsConfig()</code>로 활성/비활성 상태를 확인합니다.</p>
+            <p><code>jiti</code>의 <code>createJiti()</code>로 동적 import — TypeScript, ESM, CJS 모두 지원!</p>
+            <p>결과물: <code>OpenClawPluginModule</code> 객체가 메모리에 올라갑니다.</p>
+          </div>
+        </div>
+
+        <!-- Phase 3 -->
+        <div class="phase-card" data-idx="2" onclick="selectPhase(2)">
+          <div class="phase-header">
+            <div class="phase-num">3</div>
+            등록 (Registration)
+          </div>
+          <div class="phase-detail">
+            <div class="svg-area">
+              <svg viewBox="0 0 300 130" width="300" height="130">
+                <!-- baseplate -->
+                <rect x="30" y="85" width="240" height="30" rx="6" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+                <text x="150" y="105" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">OpenClawPluginApi 조립판</text>
+                <!-- blocks -->
+                <rect x="35" y="55" width="55" height="30" rx="4" fill="#c4b5fd" stroke="#8b5cf6" stroke-width="1.5">
+                  <animate attributeName="y" values="20;55" dur=".6s" fill="freeze"/>
+                  <animate attributeName="opacity" values="0;1" dur=".6s" fill="freeze"/>
+                </rect>
+                <text x="62" y="74" text-anchor="middle" font-size="7" fill="#fff" font-weight="700">Channel</text>
+                <rect x="95" y="55" width="55" height="30" rx="4" fill="#93c5fd" stroke="#3b82f6" stroke-width="1.5">
+                  <animate attributeName="y" values="10;55" dur=".8s" fill="freeze"/>
+                  <animate attributeName="opacity" values="0;1" dur=".8s" fill="freeze"/>
+                </rect>
+                <text x="122" y="74" text-anchor="middle" font-size="7" fill="#fff" font-weight="700">Provider</text>
+                <rect x="155" y="55" width="40" height="30" rx="4" fill="#86efac" stroke="#22c55e" stroke-width="1.5">
+                  <animate attributeName="y" values="5;55" dur="1s" fill="freeze"/>
+                  <animate attributeName="opacity" values="0;1" dur="1s" fill="freeze"/>
+                </rect>
+                <text x="175" y="74" text-anchor="middle" font-size="7" fill="#fff" font-weight="700">Hook</text>
+                <rect x="200" y="55" width="35" height="30" rx="4" fill="#fcd34d" stroke="#f59e0b" stroke-width="1.5">
+                  <animate attributeName="y" values="0;55" dur="1.2s" fill="freeze"/>
+                  <animate attributeName="opacity" values="0;1" dur="1.2s" fill="freeze"/>
+                </rect>
+                <text x="217" y="74" text-anchor="middle" font-size="7" fill="#fff" font-weight="700">Tool</text>
+              </svg>
+            </div>
+            <p><code>OpenClawPluginApi</code>가 플러그인에게 조립판을 제공합니다:</p>
+            <div class="func-list">
+              <span>registerChannel()</span>
+              <span>registerProvider()</span>
+              <span>registerHook()</span>
+              <span>registerTool()</span>
+              <span>registerHttpRoute()</span>
+              <span>registerCommand()</span>
+            </div>
+            <p>각 함수를 호출하면 레고 블록이 조립판에 '찰칵!' 하고 꽂히는 것과 같아요.</p>
+          </div>
+        </div>
+
+        <!-- Phase 4 -->
+        <div class="phase-card" data-idx="3" onclick="selectPhase(3)">
+          <div class="phase-header">
+            <div class="phase-num">4</div>
+            실행 (Runtime)
+          </div>
+          <div class="phase-detail">
+            <div class="svg-area">
+              <svg viewBox="0 0 240 120" width="240" height="120">
+                <!-- gears -->
+                <g transform="translate(80,60)">
+                  <circle cx="0" cy="0" r="24" fill="#ede9fe" stroke="#a78bfa" stroke-width="2"/>
+                  <circle cx="0" cy="0" r="8" fill="#a78bfa"/>
+                  <g stroke="#a78bfa" stroke-width="4" stroke-linecap="round">
+                    <line x1="0" y1="-24" x2="0" y2="-30"/>
+                    <line x1="0" y1="24" x2="0" y2="30"/>
+                    <line x1="-24" y1="0" x2="-30" y2="0"/>
+                    <line x1="24" y1="0" x2="30" y2="0"/>
+                  </g>
+                  <animateTransform attributeName="transform" type="rotate" values="0 80 60;360 80 60" dur="4s" repeatCount="indefinite" additive="sum"/>
+                </g>
+                <g transform="translate(155,60)">
+                  <circle cx="0" cy="0" r="18" fill="#dcfce7" stroke="#86efac" stroke-width="2"/>
+                  <circle cx="0" cy="0" r="6" fill="#86efac"/>
+                  <g stroke="#86efac" stroke-width="3" stroke-linecap="round">
+                    <line x1="0" y1="-18" x2="0" y2="-23"/>
+                    <line x1="0" y1="18" x2="0" y2="23"/>
+                    <line x1="-18" y1="0" x2="-23" y2="0"/>
+                    <line x1="18" y1="0" x2="23" y2="0"/>
+                  </g>
+                  <animateTransform attributeName="transform" type="rotate" values="360 155 60;0 155 60" dur="3s" repeatCount="indefinite" additive="sum"/>
+                </g>
+                <text x="120" y="108" text-anchor="middle" font-size="10" fill="#6c63ff" font-weight="700">Gateway + Agent 가동 중</text>
+              </svg>
+            </div>
+            <p><code>createHookRunner(registry)</code>가 <code>run*</code> 메서드들을 생성합니다.</p>
+            <p>훅은 <strong>우선순위(priority)</strong> 순서대로 실행돼요.</p>
+            <p>Gateway와 Agent들이 등록된 플러그인들을 사용하면서 메시지를 주고받습니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn" onclick="playAllPhases()">전체 과정 보기</button>
+      <button class="btn secondary" onclick="resetPhases()">초기화</button>
+
+      <div class="why-box">
+        <h4>왜 이렇게 만들었을까?</h4>
+        <p><strong>발견 → 로딩 → 등록 → 실행</strong> 4단계로 나눈 이유는 <strong>느슨한 결합(loose coupling)</strong> 때문이에요. 각 단계가 독립적이라서:</p>
+        <p>- 새 플러그인을 추가해도 기존 코드를 고칠 필요가 없어요</p>
+        <p>- 특정 플러그인만 비활성화하기 쉬워요</p>
+        <p>- TypeScript든 JavaScript든 상관없이 로딩할 수 있어요 (jiti 덕분)</p>
+        <p>마치 레고처럼, 블록을 자유롭게 끼우고 빼는 것이 가능한 거예요!</p>
+      </div>
+
+    </div>
+  </details>
+
+  <!-- ===================== LESSON 8 ===================== -->
+  <details id="lesson8">
+    <summary>레슨 8: 설정 파이프라인 (Configuration Pipeline)</summary>
+    <div class="lesson-body animate-in">
+
+      <div class="analogy">
+        <strong>비유: 요리 레시피</strong><br>
+        설정은 요리와 같아요!<br>
+        <strong>재료</strong>(여러 소스에서 가져오기) →
+        <strong>계량</strong>(파싱) →
+        <strong>검수</strong>(검증) →
+        <strong>조리</strong>(최종 적용) 순서로 완성됩니다.
+      </div>
+
+      <!-- Pipeline visualization -->
+      <div class="pipeline" id="configPipeline">
+        <div class="pipe-stage active" data-stage="0" onclick="selectStage(0)">
+          <div class="pipe-icon">
+            <svg viewBox="0 0 40 40" width="36" height="36">
+              <circle cx="12" cy="25" r="9" fill="#fcd34d" opacity=".7"/>
+              <circle cx="22" cy="18" r="9" fill="#93c5fd" opacity=".7"/>
+              <circle cx="28" cy="28" r="9" fill="#f9a8d4" opacity=".7"/>
+            </svg>
+          </div>
+          <div class="label">재료</div>
+          <div class="sublabel">Sources</div>
+        </div>
+        <div class="pipe-stage" data-stage="1" onclick="selectStage(1)">
+          <div class="pipe-icon">
+            <svg viewBox="0 0 40 40" width="36" height="36">
+              <rect x="10" y="8" width="20" height="24" rx="3" fill="#c4b5fd" stroke="#8b5cf6" stroke-width="1.5"/>
+              <line x1="14" y1="16" x2="26" y2="16" stroke="#fff" stroke-width="1.5"/>
+              <line x1="14" y1="21" x2="22" y2="21" stroke="#fff" stroke-width="1.5"/>
+              <line x1="14" y1="26" x2="24" y2="26" stroke="#fff" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <div class="label">계량</div>
+          <div class="sublabel">Parse</div>
+        </div>
+        <div class="pipe-stage" data-stage="2" onclick="selectStage(2)">
+          <div class="pipe-icon">
+            <svg viewBox="0 0 40 40" width="36" height="36">
+              <rect x="8" y="10" width="24" height="20" rx="4" fill="#86efac" stroke="#22c55e" stroke-width="1.5"/>
+              <polyline points="14,22 18,26 28,16" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="label">검수</div>
+          <div class="sublabel">Validate</div>
+        </div>
+        <div class="pipe-stage" data-stage="3" onclick="selectStage(3)">
+          <div class="pipe-icon">
+            <svg viewBox="0 0 40 40" width="36" height="36">
+              <ellipse cx="20" cy="26" rx="14" ry="8" fill="#fcd34d" opacity=".5"/>
+              <ellipse cx="20" cy="22" rx="12" ry="6" fill="#fbbf24"/>
+              <circle cx="16" cy="19" r="2" fill="#f59e0b"/>
+              <circle cx="24" cy="21" r="1.5" fill="#f59e0b"/>
+              <path d="M14 14 Q20 6 26 14" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="2"/>
+            </svg>
+          </div>
+          <div class="label">조리</div>
+          <div class="sublabel">Output</div>
+        </div>
+      </div>
+
+      <!-- Stage detail area -->
+      <div class="pipe-detail-area" id="stageDetail">
+        <div id="stageContent0" class="stage-content">
+          <p><strong>3가지 재료(소스)가 우선순위 순서대로 섞입니다:</strong></p>
+          <p>1. <strong>CLI 플래그</strong> — 가장 높은 우선순위 (예: <code>--port 3000</code>)</p>
+          <p>2. <strong>환경 변수</strong> — 중간 우선순위 (예: <code>OPENCLAW_PORT=3000</code>)</p>
+          <p>3. <strong>JSON5 설정 파일</strong> — 가장 낮은 우선순위</p>
+          <p style="margin-top:8px;color:var(--muted);font-size:.82rem">같은 설정이 여러 곳에 있으면, 높은 우선순위가 이깁니다!</p>
+        </div>
+        <div id="stageContent1" class="stage-content" style="display:none">
+          <p><strong>재료를 정확히 계량하는 단계:</strong></p>
+          <p>- <code>JSON5.parse()</code>로 설정 파일을 읽어요 (주석도 OK!)</p>
+          <p>- <code>${VAR}</code> 형태의 변수를 실제 값으로 치환합니다</p>
+          <p>- <code>includes</code>로 다른 파일을 가져와 합칩니다</p>
+        </div>
+        <div id="stageContent2" class="stage-content" style="display:none">
+          <p><strong>품질 검사 단계:</strong></p>
+          <p>- 오래된 형식은 자동으로 새 형식으로 마이그레이션</p>
+          <p>- <code>Zod</code> 스키마로 타입과 값의 범위를 검사</p>
+          <p>- 플러그인 이름이 실제로 존재하는지 확인</p>
+          <p style="color:var(--accent4);font-size:.82rem;margin-top:6px">검사 실패 시 친절한 에러 메시지와 함께 멈춥니다!</p>
+        </div>
+        <div id="stageContent3" class="stage-content" style="display:none">
+          <p><strong>최종 완성 단계:</strong></p>
+          <p>- 비어있는 값에 기본값 적용: agents, models, sessions, logging, compaction</p>
+          <p>- 결과물: <code>OpenClawConfig</code> (타입 안전, 검증 완료)</p>
+          <p>- <strong>Atomic write</strong>로 파일 저장 (중간에 꺼져도 안전)</p>
+          <p>- <strong>Backup rotation</strong>으로 이전 설정 자동 백업</p>
+        </div>
+      </div>
+
+      <!-- Interactive demo -->
+      <div class="config-demo">
+        <h4>직접 해보기: 설정값이 파이프라인을 통과하는 과정</h4>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:10px">소스를 클릭하면 값이 파이프라인을 통과합니다!</p>
+        <div class="source-btns">
+          <button onclick="addConfigValue('cli')">CLI: --port 8080</button>
+          <button onclick="addConfigValue('env')">ENV: PORT=3000</button>
+          <button onclick="addConfigValue('file')">FILE: port: 4000</button>
+          <button onclick="addConfigValue('invalid')">FILE: port: "abc"</button>
+          <button class="btn secondary" onclick="clearLog()" style="padding:8px 12px;margin:0">지우기</button>
+        </div>
+        <div class="flow-log" id="flowLog"></div>
+      </div>
+
+      <div class="why-box">
+        <h4>왜 이렇게 만들었을까?</h4>
+        <p><strong>재료 → 계량 → 검수 → 조리</strong> 파이프라인 구조의 장점:</p>
+        <p>- <strong>우선순위 시스템:</strong> CLI > 환경변수 > 파일 순서 덕분에, 배포 환경마다 설정을 쉽게 바꿀 수 있어요</p>
+        <p>- <strong>Zod 검증:</strong> 잘못된 설정을 미리 잡아서 런타임 에러를 방지해요</p>
+        <p>- <strong>Atomic write:</strong> 설정 저장 중 프로그램이 꺼져도 파일이 깨지지 않아요 (임시 파일에 먼저 쓰고, 완료 후 이름을 바꿈)</p>
+        <p>- <strong>JSON5:</strong> 주석을 쓸 수 있어서 "이 설정이 왜 이 값인지" 메모할 수 있어요</p>
+      </div>
+
+    </div>
+  </details>
+
+</div>
+
+<script>
+/* ===== LESSON 3: Plugin Phases ===== */
+const phases = document.querySelectorAll('#pluginPhases .phase-card');
+const steps = document.querySelectorAll('#pluginProgress .step');
+
+function selectPhase(idx) {
+  phases.forEach((p, i) => {
+    p.classList.toggle('active', i === idx);
+    p.classList.toggle('done', i < idx);
+  });
+  steps.forEach((s, i) => {
+    s.classList.toggle('active', i === idx);
+    s.classList.toggle('done', i < idx);
+  });
+}
+
+function playAllPhases() {
+  let i = 0;
+  selectPhase(0);
+  const timer = setInterval(() => {
+    i++;
+    if (i >= 4) { clearInterval(timer); return; }
+    selectPhase(i);
+  }, 1200);
+}
+
+function resetPhases() {
+  selectPhase(0);
+}
+
+/* ===== LESSON 8: Config Pipeline ===== */
+const pipeStages = document.querySelectorAll('#configPipeline .pipe-stage');
+const stageContents = document.querySelectorAll('.stage-content');
+
+function selectStage(idx) {
+  pipeStages.forEach((s, i) => {
+    s.classList.toggle('active', i <= idx);
+  });
+  stageContents.forEach((c, i) => {
+    c.style.display = i === idx ? 'block' : 'none';
+  });
+}
+
+/* Interactive config demo */
+const flowLog = document.getElementById('flowLog');
+let logLines = [];
+
+function appendLog(html) {
+  logLines.push(html);
+  flowLog.innerHTML = logLines.join('<br>');
+  flowLog.scrollTop = flowLog.scrollHeight;
+}
+
+function addConfigValue(source) {
+  const ts = () => new Date().toLocaleTimeString('ko-KR', {hour12:false});
+
+  if (source === 'cli') {
+    appendLog('<span class="info">[' + ts() + '] 재료: CLI 플래그 --port 8080 추가</span>');
+    setTimeout(() => {
+      appendLog('<span class="info">[' + ts() + '] 계량: 파싱 완료 → port = 8080 (숫자)</span>');
+    }, 400);
+    setTimeout(() => {
+      appendLog('<span class="ok">[' + ts() + '] 검수: Zod 검증 통과! port는 1~65535 범위 OK</span>');
+    }, 800);
+    setTimeout(() => {
+      appendLog('<span class="ok">[' + ts() + '] 조리: OpenClawConfig.port = 8080 (CLI 우선순위 적용)</span>');
+    }, 1200);
+  }
+  else if (source === 'env') {
+    appendLog('<span class="info">[' + ts() + '] 재료: 환경변수 OPENCLAW_PORT=3000 추가</span>');
+    setTimeout(() => {
+      appendLog('<span class="info">[' + ts() + '] 계량: 문자열 "3000" → 숫자 3000 변환</span>');
+    }, 400);
+    setTimeout(() => {
+      appendLog('<span class="ok">[' + ts() + '] 검수: Zod 검증 통과!</span>');
+    }, 800);
+    setTimeout(() => {
+      appendLog('<span class="warn">[' + ts() + '] 조리: CLI 값(8080)이 이미 있으면 ENV 값은 무시됨</span>');
+    }, 1200);
+  }
+  else if (source === 'file') {
+    appendLog('<span class="info">[' + ts() + '] 재료: JSON5 파일 { port: 4000 } 읽기</span>');
+    setTimeout(() => {
+      appendLog('<span class="info">[' + ts() + '] 계량: JSON5.parse() 완료, ${VAR} 치환 없음</span>');
+    }, 400);
+    setTimeout(() => {
+      appendLog('<span class="ok">[' + ts() + '] 검수: Zod 검증 통과!</span>');
+    }, 800);
+    setTimeout(() => {
+      appendLog('<span class="warn">[' + ts() + '] 조리: CLI/ENV 값이 있으면 파일 값은 가장 낮은 우선순위</span>');
+    }, 1200);
+  }
+  else if (source === 'invalid') {
+    appendLog('<span class="info">[' + ts() + '] 재료: JSON5 파일 { port: "abc" } 읽기</span>');
+    setTimeout(() => {
+      appendLog('<span class="info">[' + ts() + '] 계량: JSON5.parse() 완료 → port = "abc" (문자열)</span>');
+    }, 400);
+    setTimeout(() => {
+      appendLog('<span class="err">[' + ts() + '] 검수 실패! Zod 에러: port는 숫자여야 합니다.</span>');
+      appendLog('<span class="err">  → 기대값: number, 받은값: string ("abc")</span>');
+      appendLog('<span class="err">  → 설정을 수정하고 다시 시도해 주세요!</span>');
+    }, 800);
+  }
+}
+
+function clearLog() {
+  logLines = [];
+  flowLog.innerHTML = '';
+}
+</script>
+</body>
+</html>

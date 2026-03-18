@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw 인터랙티브 학습 가이드</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f8f9fc; --card: #ffffff; --primary: #6366f1; --primary-light: #e0e7ff;
+  --text: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+  --green: #10b981; --blue: #3b82f6; --purple: #8b5cf6; --orange: #f59e0b;
+  --pink: #ec4899; --teal: #14b8a6; --red: #ef4444;
+  --radius: 16px; --shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+body {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+/* NAV */
+nav {
+  position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+}
+nav ul { display: flex; gap: 8px; list-style: none; max-width: 900px; margin: 0 auto; overflow-x: auto; }
+nav a {
+  display: block; padding: 14px 16px; text-decoration: none; color: var(--text-muted);
+  font-size: 14px; font-weight: 600; white-space: nowrap; border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+}
+nav a:hover, nav a.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+/* MAIN */
+.container { max-width: 900px; margin: 0 auto; padding: 32px 20px 80px; }
+h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+.subtitle { color: var(--text-muted); font-size: 16px; margin-bottom: 40px; }
+
+/* DETAILS / LESSONS */
+details {
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+  margin-bottom: 24px; overflow: hidden; border: 1px solid var(--border);
+}
+details[open] { border-color: var(--primary); }
+summary {
+  padding: 20px 24px; font-size: 18px; font-weight: 700; cursor: pointer;
+  list-style: none; display: flex; align-items: center; gap: 12px;
+  user-select: none; transition: background 0.2s;
+}
+summary:hover { background: var(--primary-light); }
+summary::before {
+  content: ''; display: inline-block; width: 0; height: 0;
+  border-left: 8px solid var(--primary); border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent; transition: transform 0.3s;
+  flex-shrink: 0;
+}
+details[open] > summary::before { transform: rotate(90deg); }
+summary::-webkit-details-marker { display: none; }
+.lesson-num {
+  background: var(--primary); color: #fff; width: 32px; height: 32px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+}
+.lesson-body { padding: 0 24px 24px; }
+.analogy {
+  background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 12px;
+  padding: 16px 20px; margin-bottom: 20px; font-size: 15px;
+}
+.analogy strong { color: #92400e; }
+
+/* WHY SECTION */
+.why-section {
+  background: linear-gradient(135deg, var(--primary-light), #f0f4ff);
+  border-radius: 12px; padding: 20px; margin-top: 24px;
+  border-left: 4px solid var(--primary);
+}
+.why-section h4 { color: var(--primary); margin-bottom: 8px; font-size: 16px; }
+.why-section p { font-size: 14px; color: var(--text-muted); line-height: 1.8; }
+
+/* TOOLTIP / POPUP */
+.popup-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  z-index: 200; align-items: center; justify-content: center; padding: 20px;
+}
+.popup-overlay.show { display: flex; }
+.popup-card {
+  background: #fff; border-radius: var(--radius); padding: 28px; max-width: 420px;
+  width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  animation: popIn 0.25s ease-out;
+}
+@keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.popup-card h3 { margin-bottom: 6px; font-size: 18px; }
+.popup-card .comp-name { color: var(--primary); font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+.popup-card p { font-size: 14px; color: var(--text-muted); line-height: 1.8; }
+.popup-card button {
+  margin-top: 16px; background: var(--primary); color: #fff; border: none;
+  padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 600;
+  cursor: pointer;
+}
+
+/* SVG BUILDING */
+.svg-wrap { overflow-x: auto; padding: 10px 0; }
+.svg-wrap svg { display: block; margin: 0 auto; }
+.room { cursor: pointer; transition: filter 0.2s, transform 0.2s; }
+.room:hover { filter: brightness(0.92); }
+
+/* TIMELINE */
+.timeline-wrap { overflow-x: auto; padding: 20px 0; -webkit-overflow-scrolling: touch; }
+.timeline {
+  display: flex; gap: 0; min-width: max-content; padding: 20px 40px;
+  position: relative;
+}
+.timeline::before {
+  content: ''; position: absolute; top: 50%; left: 40px; right: 40px;
+  height: 4px; background: linear-gradient(90deg, #a7f3d0, #6ee7b7, #34d399, #10b981, #059669, #047857);
+  border-radius: 2px; transform: translateY(-50%);
+}
+.tl-node {
+  position: relative; display: flex; flex-direction: column; align-items: center;
+  width: 160px; flex-shrink: 0; cursor: pointer; z-index: 1;
+}
+.tl-icon {
+  width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-size: 28px; background: #fff; border: 4px solid #10b981;
+  box-shadow: 0 4px 16px rgba(16,185,129,0.2); transition: transform 0.3s;
+}
+.tl-node:hover .tl-icon { transform: scale(1.15); }
+.tl-date { font-size: 11px; color: var(--text-muted); margin-top: 10px; font-weight: 600; }
+.tl-label { font-size: 13px; font-weight: 700; margin-top: 4px; text-align: center; }
+.tl-detail {
+  display: none; position: absolute; top: 110%; left: 50%; transform: translateX(-50%);
+  background: #fff; border-radius: 12px; padding: 16px; width: 220px;
+  box-shadow: var(--shadow); border: 1px solid var(--border); font-size: 13px;
+  color: var(--text-muted); line-height: 1.7; z-index: 10; text-align: center;
+}
+.tl-node.active .tl-detail { display: block; animation: popIn 0.2s ease-out; }
+
+/* BUBBLES */
+.bubble-group { margin-bottom: 28px; }
+.bubble-group h4 { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+.bubbles { display: flex; flex-wrap: wrap; gap: 10px; }
+.bubble {
+  padding: 10px 18px; border-radius: 50px; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; border: none;
+  color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.bubble:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+.cat-channel .bubble { background: linear-gradient(135deg, #3b82f6, #6366f1); }
+.cat-llm .bubble { background: linear-gradient(135deg, #8b5cf6, #a855f7); }
+.cat-tool .bubble { background: linear-gradient(135deg, #10b981, #14b8a6); }
+
+/* FLIP CARDS */
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+.flip-card { perspective: 800px; height: 180px; cursor: pointer; }
+.flip-inner {
+  position: relative; width: 100%; height: 100%; transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+.flip-card.flipped .flip-inner { transform: rotateY(180deg); }
+.flip-front, .flip-back {
+  position: absolute; inset: 0; backface-visibility: hidden;
+  border-radius: 14px; padding: 20px; display: flex; flex-direction: column;
+  justify-content: center;
+}
+.flip-front {
+  background: linear-gradient(135deg, var(--primary), #818cf8); color: #fff;
+}
+.flip-front .card-num { font-size: 13px; opacity: 0.7; margin-bottom: 4px; }
+.flip-front .card-title { font-size: 16px; font-weight: 700; }
+.flip-front .tap-hint { font-size: 11px; opacity: 0.6; margin-top: auto; }
+.flip-back {
+  background: #fff; border: 2px solid var(--primary); transform: rotateY(180deg);
+}
+.flip-back p { font-size: 13px; color: var(--text-muted); line-height: 1.8; }
+
+/* DRAG QUIZ */
+.quiz-section { margin-top: 28px; }
+.quiz-section h4 { font-size: 16px; margin-bottom: 12px; }
+.quiz-list { display: flex; flex-direction: column; gap: 8px; counter-reset: qi; }
+.quiz-item {
+  background: #fff; border: 2px solid var(--border); border-radius: 12px;
+  padding: 14px 18px; font-size: 14px; cursor: grab; user-select: none;
+  display: flex; align-items: center; gap: 12px; transition: border-color 0.2s, background 0.2s;
+}
+.quiz-item:active { cursor: grabbing; }
+.quiz-item.dragging { opacity: 0.4; }
+.quiz-item.over { border-color: var(--primary); background: var(--primary-light); }
+.quiz-item .qi-num {
+  width: 28px; height: 28px; border-radius: 50%; background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+.quiz-check-btn {
+  margin-top: 16px; background: var(--green); color: #fff; border: none;
+  padding: 12px 28px; border-radius: 12px; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: background 0.2s;
+}
+.quiz-check-btn:hover { background: #059669; }
+.quiz-result {
+  margin-top: 12px; padding: 16px; border-radius: 12px; font-size: 14px;
+  font-weight: 600; display: none;
+}
+.quiz-result.correct { display: block; background: #d1fae5; color: #065f46; }
+.quiz-result.wrong { display: block; background: #fee2e2; color: #991b1b; }
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+  h1 { font-size: 22px; }
+  summary { font-size: 16px; padding: 16px 18px; }
+  .lesson-body { padding: 0 18px 18px; }
+  .cards-grid { grid-template-columns: 1fr; }
+  nav a { padding: 12px 12px; font-size: 13px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <ul>
+    <li><a href="index.html" class="active">홈: 아키텍처 가이드</a></li>
+    <li><a href="message-flow.html">메시지 흐름</a></li>
+    <li><a href="systems.html">핵심 시스템</a></li>
+  </ul>
+</nav>
+
+<div class="container">
+  <h1>OpenClaw 인터랙티브 학습 가이드</h1>
+  <p class="subtitle">코딩 초보자를 위한 시각적 아키텍처 탐험 - 비유로 배우는 OpenClaw</p>
+
+  <!-- ==================== LESSON 1 ==================== -->
+  <details open>
+    <summary>
+      <span class="lesson-num">1</span>
+      시스템 전체 구조 (System Architecture)
+    </summary>
+    <div class="lesson-body">
+      <div class="analogy">
+        <strong>비유: 대형 우체국</strong> — OpenClaw을 거대한 우체국에 비유해 봅시다.
+        CLI는 정문, Gateway는 중앙 홀, 채널은 우편함, 에이전트는 배달부, 플러그인은 각 부서입니다.
+        아래 건물의 각 방을 클릭해 보세요!
+      </div>
+
+      <div class="svg-wrap">
+        <svg viewBox="0 0 800 420" width="800" height="420" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;">
+          <!-- Building outline -->
+          <rect x="20" y="30" width="760" height="370" rx="18" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+          <!-- Roof -->
+          <polygon points="400,8 20,30 780,30" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="2"/>
+          <text x="400" y="24" text-anchor="middle" font-size="12" fill="#64748b" font-weight="700">OpenClaw 우체국</text>
+
+          <!-- CLI Layer (정문) -->
+          <g class="room" onclick="showRoom('cli')">
+            <rect x="40" y="50" width="120" height="160" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="100" y="90" text-anchor="middle" font-size="13" font-weight="700" fill="#1e40af">정문</text>
+            <text x="100" y="110" text-anchor="middle" font-size="11" fill="#3b82f6">CLI Layer</text>
+            <!-- Door icon -->
+            <rect x="75" y="140" width="50" height="60" rx="6" fill="#93c5fd"/>
+            <circle cx="115" cy="170" r="4" fill="#1e40af"/>
+          </g>
+
+          <!-- Gateway (중앙 홀) -->
+          <g class="room" onclick="showRoom('gateway')">
+            <rect x="180" y="50" width="160" height="160" rx="12" fill="#e0e7ff" stroke="#6366f1" stroke-width="2"/>
+            <text x="260" y="90" text-anchor="middle" font-size="13" font-weight="700" fill="#4338ca">중앙 홀</text>
+            <text x="260" y="110" text-anchor="middle" font-size="11" fill="#6366f1">Gateway</text>
+            <!-- Desk icon -->
+            <rect x="210" y="140" width="100" height="12" rx="3" fill="#a5b4fc"/>
+            <rect x="220" y="152" width="10" height="30" rx="2" fill="#a5b4fc"/>
+            <rect x="290" y="152" width="10" height="30" rx="2" fill="#a5b4fc"/>
+          </g>
+
+          <!-- Channels (우편함들) -->
+          <g class="room" onclick="showRoom('channels')">
+            <rect x="360" y="50" width="140" height="160" rx="12" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+            <text x="430" y="90" text-anchor="middle" font-size="13" font-weight="700" fill="#065f46">우편함들</text>
+            <text x="430" y="110" text-anchor="middle" font-size="11" fill="#10b981">Channels</text>
+            <!-- Mailboxes -->
+            <rect x="385" y="130" width="30" height="25" rx="4" fill="#6ee7b7"/>
+            <rect x="420" y="130" width="30" height="25" rx="4" fill="#6ee7b7"/>
+            <rect x="455" y="130" width="30" height="25" rx="4" fill="#6ee7b7"/>
+            <rect x="385" y="162" width="30" height="25" rx="4" fill="#6ee7b7"/>
+            <rect x="420" y="162" width="30" height="25" rx="4" fill="#6ee7b7"/>
+            <rect x="455" y="162" width="30" height="25" rx="4" fill="#6ee7b7"/>
+          </g>
+
+          <!-- Agent (배달부 사무실) -->
+          <g class="room" onclick="showRoom('agent')">
+            <rect x="520" y="50" width="130" height="160" rx="12" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+            <text x="585" y="90" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">배달부 사무실</text>
+            <text x="585" y="110" text-anchor="middle" font-size="11" fill="#f59e0b">Agent</text>
+            <!-- Person icon -->
+            <circle cx="585" cy="145" r="16" fill="#fcd34d"/>
+            <rect x="567" y="165" width="36" height="25" rx="8" fill="#fcd34d"/>
+          </g>
+
+          <!-- Plugins (각 부서) -->
+          <g class="room" onclick="showRoom('plugins')">
+            <rect x="670" y="50" width="100" height="160" rx="12" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+            <text x="720" y="90" text-anchor="middle" font-size="13" font-weight="700" fill="#9d174d">각 부서</text>
+            <text x="720" y="110" text-anchor="middle" font-size="11" fill="#ec4899">Plugins</text>
+            <!-- Gear icons -->
+            <circle cx="705" cy="150" r="14" fill="#f9a8d4" stroke="#ec4899" stroke-width="2"/>
+            <circle cx="735" cy="170" r="14" fill="#f9a8d4" stroke="#ec4899" stroke-width="2"/>
+          </g>
+
+          <!-- Support (지원실) -->
+          <g class="room" onclick="showRoom('support')">
+            <rect x="40" y="230" width="730" height="150" rx="12" fill="#f0fdfa" stroke="#14b8a6" stroke-width="2"/>
+            <text x="405" y="270" text-anchor="middle" font-size="14" font-weight="700" fill="#0f766e">지원실 (Support Layer)</text>
+            <!-- Sub boxes -->
+            <rect x="60" y="285" width="130" height="50" rx="8" fill="#ccfbf1" stroke="#14b8a6" stroke-width="1.5"/>
+            <text x="125" y="315" text-anchor="middle" font-size="11" fill="#0f766e">Config (설정)</text>
+            <rect x="210" y="285" width="130" height="50" rx="8" fill="#ccfbf1" stroke="#14b8a6" stroke-width="1.5"/>
+            <text x="275" y="315" text-anchor="middle" font-size="11" fill="#0f766e">Logger (로깅)</text>
+            <rect x="360" y="285" width="130" height="50" rx="8" fill="#ccfbf1" stroke="#14b8a6" stroke-width="1.5"/>
+            <text x="425" y="315" text-anchor="middle" font-size="11" fill="#0f766e">Events (이벤트)</text>
+            <rect x="510" y="285" width="130" height="50" rx="8" fill="#ccfbf1" stroke="#14b8a6" stroke-width="1.5"/>
+            <text x="575" y="315" text-anchor="middle" font-size="11" fill="#0f766e">State (상태)</text>
+            <rect x="660" y="285" width="100" height="50" rx="8" fill="#ccfbf1" stroke="#14b8a6" stroke-width="1.5"/>
+            <text x="710" y="315" text-anchor="middle" font-size="11" fill="#0f766e">Cron (스케줄)</text>
+          </g>
+
+          <!-- Arrows -->
+          <defs><marker id="arw" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#94a3b8"/></marker></defs>
+          <line x1="160" y1="130" x2="178" y2="130" stroke="#94a3b8" stroke-width="2" marker-end="url(#arw)"/>
+          <line x1="340" y1="130" x2="358" y2="130" stroke="#94a3b8" stroke-width="2" marker-end="url(#arw)"/>
+          <line x1="500" y1="130" x2="518" y2="130" stroke="#94a3b8" stroke-width="2" marker-end="url(#arw)"/>
+          <line x1="650" y1="130" x2="668" y2="130" stroke="#94a3b8" stroke-width="2" marker-end="url(#arw)"/>
+        </svg>
+      </div>
+
+      <div class="why-section">
+        <h4>왜 이렇게 만들었을까?</h4>
+        <p>
+          우체국처럼 각 부서가 독립적으로 일하면, 한 부서가 고장나도 다른 부서는 정상 작동합니다.
+          OpenClaw도 같은 원리입니다 — CLI, Gateway, 채널, 에이전트가 각각 분리되어 있어서
+          Slack 채널에 문제가 생겨도 Discord 채널은 멀쩡하게 돌아갑니다.
+          이것을 <strong>"관심사의 분리(Separation of Concerns)"</strong>라고 합니다.
+        </p>
+      </div>
+    </div>
+  </details>
+
+  <!-- ==================== LESSON 4 ==================== -->
+  <details>
+    <summary>
+      <span class="lesson-num">4</span>
+      프로젝트 성장 이야기 (Evolution Timeline)
+    </summary>
+    <div class="lesson-body">
+      <div class="analogy">
+        <strong>비유: 나무의 성장</strong> — OpenClaw은 작은 씨앗에서 시작해 거대한 숲으로 자랐습니다.
+        아래 타임라인의 각 단계를 클릭해 보세요!
+      </div>
+
+      <div class="timeline-wrap">
+        <div class="timeline" id="timeline">
+          <div class="tl-node" onclick="toggleTl(this)">
+            <div class="tl-icon" style="border-color:#a7f3d0">🌰</div>
+            <div class="tl-date">2025-11-24</div>
+            <div class="tl-label">씨앗</div>
+            <div class="tl-detail">
+              <strong>warelay CLI, 511줄</strong><br>
+              가장 처음 시작! 단순한 CLI 도구로 시작했습니다. 모든 위대한 프로젝트는 작은 첫 걸음에서 시작합니다.
+            </div>
+          </div>
+          <div class="tl-node" onclick="toggleTl(this)">
+            <div class="tl-icon" style="border-color:#6ee7b7">🌱</div>
+            <div class="tl-date">2025-11-27</div>
+            <div class="tl-label">새싹</div>
+            <div class="tl-detail">
+              <strong>WhatsApp + Claude 자동응답</strong><br>
+              첫 번째 채널과 AI를 연결! WhatsApp 메시지에 Claude가 자동으로 답하기 시작했습니다.
+            </div>
+          </div>
+          <div class="tl-node" onclick="toggleTl(this)">
+            <div class="tl-icon" style="border-color:#34d399">🌿</div>
+            <div class="tl-date">2025-12-02</div>
+            <div class="tl-label">가지</div>
+            <div class="tl-detail">
+              <strong>미디어 파이프라인, 멀티 프로바이더</strong><br>
+              이미지, 음성 등 미디어 처리가 추가되고 Claude 외에 다른 AI도 쓸 수 있게 되었습니다.
+            </div>
+          </div>
+          <div class="tl-node" onclick="toggleTl(this)">
+            <div class="tl-icon" style="border-color:#10b981">🪵</div>
+            <div class="tl-date">2025-12-04</div>
+            <div class="tl-label">줄기</div>
+            <div class="tl-detail">
+              <strong>상태 모니터링, 이벤트, 크론</strong><br>
+              시스템 건강 체크, 이벤트 시스템, 예약 작업 등 운영에 필요한 기반이 완성되었습니다.
+            </div>
+          </div>
+          <div class="tl-node" onclick="toggleTl(this)">
+            <div class="tl-icon" style="border-color:#059669">🌳</div>
+            <div class="tl-date">2025-12-19</div>
+            <div class="tl-label">나무</div>
+            <div class="tl-detail">
+              <strong>Gateway + Plugin SDK 대규모 리팩토링</strong><br>
+              1,463 커밋! 코어를 완전히 재설계하여 누구나 플러그인을 만들 수 있는 구조로 탈바꿈했습니다.
+            </div>
+          </div>
+          <div class="tl-node" onclick="toggleTl(this)">
+            <div class="tl-icon" style="border-color:#047857">🌲</div>
+            <div class="tl-date">2026-01-16~현재</div>
+            <div class="tl-label">숲</div>
+            <div class="tl-detail">
+              <strong>캘린더 버전, 75+ 확장</strong><br>
+              이제 하나의 나무가 아니라 숲이 되었습니다. 75개 이상의 확장이 생태계를 이루고 있습니다.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="why-section">
+        <h4>왜 이렇게 만들었을까?</h4>
+        <p>
+          처음부터 완벽한 시스템을 만들려고 하지 않았습니다. 작은 기능(511줄!)에서 시작해
+          사용자의 필요에 따라 점진적으로 성장했습니다. 이것이 소프트웨어 개발의 핵심 원칙인
+          <strong>"점진적 발전(Iterative Development)"</strong>입니다.
+          여러분도 프로젝트를 만들 때, 작게 시작하고 조금씩 키워 나가세요!
+        </p>
+      </div>
+    </div>
+  </details>
+
+  <!-- ==================== LESSON 5 ==================== -->
+  <details>
+    <summary>
+      <span class="lesson-num">5</span>
+      확장 생태계 (Extension Ecosystem)
+    </summary>
+    <div class="lesson-body">
+      <div class="analogy">
+        <strong>비유: 앱스토어</strong> — OpenClaw의 확장들은 스마트폰의 앱스토어와 같습니다.
+        소통 앱, 두뇌 앱, 도구 앱으로 나뉩니다. 각 버블을 클릭해 보세요!
+      </div>
+
+      <div class="bubble-group cat-channel">
+        <h4>📨 채널 확장 (소통 앱)</h4>
+        <div class="bubbles">
+          <button class="bubble" onclick="showBubble('Slack','팀 협업 도구 Slack과 연결합니다. 워크스페이스의 메시지를 AI가 읽고 답합니다.')">Slack</button>
+          <button class="bubble" onclick="showBubble('Discord','게이머와 커뮤니티를 위한 Discord 서버에 AI 봇을 추가합니다.')">Discord</button>
+          <button class="bubble" onclick="showBubble('Telegram','전 세계에서 사랑받는 Telegram 메신저와 연결합니다.')">Telegram</button>
+          <button class="bubble" onclick="showBubble('WhatsApp','가장 많이 쓰이는 메신저 WhatsApp에서 AI와 대화합니다.')">WhatsApp</button>
+          <button class="bubble" onclick="showBubble('Signal','개인정보 보호에 강한 Signal 메신저를 지원합니다.')">Signal</button>
+          <button class="bubble" onclick="showBubble('iMessage','Apple의 iMessage를 통해 AI와 대화할 수 있습니다.')">iMessage</button>
+          <button class="bubble" onclick="showBubble('Line','일본과 동남아에서 인기 있는 Line 메신저를 지원합니다.')">Line</button>
+          <button class="bubble" onclick="showBubble('Webhook','어떤 서비스든 웹훅으로 연결할 수 있는 범용 채널입니다.')">Webhook</button>
+        </div>
+      </div>
+
+      <div class="bubble-group cat-llm">
+        <h4>🧠 LLM 제공자 (두뇌 앱)</h4>
+        <div class="bubbles">
+          <button class="bubble" onclick="showBubble('Anthropic','Claude를 만든 회사. 안전하고 도움이 되는 AI를 제공합니다.')">Anthropic</button>
+          <button class="bubble" onclick="showBubble('OpenAI','GPT 시리즈를 만든 회사. ChatGPT로 유명합니다.')">OpenAI</button>
+          <button class="bubble" onclick="showBubble('Google','Gemini 모델을 제공합니다. 검색과 결합된 강력한 AI입니다.')">Google</button>
+          <button class="bubble" onclick="showBubble('Ollama','내 컴퓨터에서 AI를 돌릴 수 있게 해줍니다. 인터넷 없이도 작동!')">Ollama</button>
+          <button class="bubble" onclick="showBubble('Groq','초고속 AI 추론을 제공합니다. 빠른 응답이 필요할 때 사용합니다.')">Groq</button>
+          <button class="bubble" onclick="showBubble('AWS Bedrock','Amazon의 클라우드에서 다양한 AI 모델을 사용할 수 있습니다.')">AWS Bedrock</button>
+        </div>
+      </div>
+
+      <div class="bubble-group cat-tool">
+        <h4>🔧 기능 확장 (도구 앱)</h4>
+        <div class="bubbles">
+          <button class="bubble" onclick="showBubble('Memory','AI가 이전 대화를 기억합니다. 매번 처음부터 설명할 필요가 없어요!')">Memory</button>
+          <button class="bubble" onclick="showBubble('Voice','음성 메시지를 텍스트로 변환하고, 텍스트를 음성으로 읽어줍니다.')">Voice</button>
+          <button class="bubble" onclick="showBubble('Dev Tools','개발자를 위한 디버깅, 테스팅, 모니터링 도구 모음입니다.')">Dev Tools</button>
+          <button class="bubble" onclick="showBubble('Calendar','일정 관리와 알림을 AI가 도와줍니다.')">Calendar</button>
+          <button class="bubble" onclick="showBubble('RAG','문서를 검색해서 AI가 더 정확한 답변을 제공합니다.')">RAG</button>
+          <button class="bubble" onclick="showBubble('Analytics','사용 통계와 분석을 제공합니다. 어떤 기능이 많이 쓰이는지 파악!')">Analytics</button>
+        </div>
+      </div>
+
+      <div class="why-section">
+        <h4>왜 이렇게 만들었을까?</h4>
+        <p>
+          스마트폰이 앱스토어 없이는 전화기일 뿐이듯, OpenClaw도 확장 없이는 빈 프레임워크입니다.
+          확장을 통해 누구나 새로운 기능을 추가할 수 있어서, 코어 팀이 모든 것을 만들 필요가 없습니다.
+          이것이 <strong>"플러그인 아키텍처"</strong>의 핵심 — 생태계가 스스로 성장합니다.
+        </p>
+      </div>
+    </div>
+  </details>
+
+  <!-- ==================== LESSON 9 ==================== -->
+  <details>
+    <summary>
+      <span class="lesson-num">9</span>
+      설계 원칙과 만드는 순서 (Design Principles &amp; Build Order)
+    </summary>
+    <div class="lesson-body">
+      <div class="analogy">
+        <strong>비유: 집 짓기</strong> — 좋은 소프트웨어는 좋은 집처럼 설계 원칙이 필요합니다.
+        카드를 클릭하면 뒤집어서 설명을 볼 수 있습니다!
+      </div>
+
+      <div class="cards-grid" id="principleCards">
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <div class="flip-inner">
+            <div class="flip-front">
+              <div class="card-num">원칙 1</div>
+              <div class="card-title">어댑터 패턴</div>
+              <div class="tap-hint">클릭하여 뒤집기</div>
+            </div>
+            <div class="flip-back">
+              <p>채널과 프로바이더는 <strong>교체 가능한 어댑터</strong>입니다. USB-C 케이블처럼, 같은 모양의 플러그만 맞으면 어떤 기기든 연결됩니다. Slack을 빼고 Discord를 꽂아도 코어 코드는 한 줄도 안 바뀝니다.</p>
+            </div>
+          </div>
+        </div>
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <div class="flip-inner">
+            <div class="flip-front">
+              <div class="card-num">원칙 2</div>
+              <div class="card-title">플러그인 우선</div>
+              <div class="tap-hint">클릭하여 뒤집기</div>
+            </div>
+            <div class="flip-back">
+              <p><strong>내장 채널도 플러그인</strong>이고, 코어는 최대한 얇게 유지합니다. 특별한 코드가 아니라, 누구나 만들 수 있는 플러그인과 동일한 방식으로 내장 기능도 동작합니다.</p>
+            </div>
+          </div>
+        </div>
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <div class="flip-inner">
+            <div class="flip-front">
+              <div class="card-num">원칙 3</div>
+              <div class="card-title">훅 중심</div>
+              <div class="tap-hint">클릭하여 뒤집기</div>
+            </div>
+            <div class="flip-back">
+              <p><strong>25개 이상의 생명주기 훅</strong>으로 느슨한 결합을 만듭니다. 마치 이벤트 알림처럼, "메시지 도착 시", "응답 전" 등의 시점에 원하는 코드를 끼워 넣을 수 있습니다.</p>
+            </div>
+          </div>
+        </div>
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <div class="flip-inner">
+            <div class="flip-front">
+              <div class="card-num">원칙 4</div>
+              <div class="card-title">세션 격리</div>
+              <div class="tap-hint">클릭하여 뒤집기</div>
+            </div>
+            <div class="flip-back">
+              <p><strong>동시 사용자가 서로 간섭하지 않습니다.</strong> 카페에서 각자 테이블에 앉은 것처럼, A의 대화 내용이 B에게 보이지 않고, A의 오류가 B에게 영향을 주지 않습니다.</p>
+            </div>
+          </div>
+        </div>
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <div class="flip-inner">
+            <div class="flip-front">
+              <div class="card-num">원칙 5</div>
+              <div class="card-title">설정은 코드</div>
+              <div class="tap-hint">클릭하여 뒤집기</div>
+            </div>
+            <div class="flip-back">
+              <p><strong>JSON5 + Zod = 사람 친화적 + 타입 안전</strong>. 설정 파일이 주석도 쓸 수 있고(JSON5), 동시에 잘못된 값을 넣으면 즉시 알려줍니다(Zod 검증).</p>
+            </div>
+          </div>
+        </div>
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <div class="flip-inner">
+            <div class="flip-front">
+              <div class="card-num">원칙 6</div>
+              <div class="card-title">엄격한 경계</div>
+              <div class="tap-hint">클릭하여 뒤집기</div>
+            </div>
+            <div class="flip-back">
+              <p><strong>70개 이상의 SDK 서브패스</strong>로 교차 임포트를 방지합니다. 아파트의 현관문처럼, 허가된 입구만 사용해야 합니다. 이렇게 하면 코드가 서로 엉키지 않습니다.</p>
+            </div>
+          </div>
+        </div>
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <div class="flip-inner">
+            <div class="flip-front">
+              <div class="card-num">원칙 7</div>
+              <div class="card-title">이벤트 중심</div>
+              <div class="tap-hint">클릭하여 뒤집기</div>
+            </div>
+            <div class="flip-back">
+              <p><strong>모든 단계에 훅이 있는 메시지 파이프라인</strong>입니다. 공장의 컨베이어 벨트처럼, 메시지가 각 단계를 지나가면서 검사, 변환, 로깅이 자동으로 일어납니다.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUIZ -->
+      <div class="quiz-section">
+        <h4>🏗️ 만드는 순서 퀴즈</h4>
+        <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px;">
+          아래 7단계를 올바른 순서로 드래그하여 정렬해 보세요. 집을 지을 때 기초부터 쌓듯이, 소프트웨어도 순서가 있습니다!
+        </p>
+        <div class="quiz-list" id="quizList"></div>
+        <button class="quiz-check-btn" onclick="checkQuiz()">정답 확인하기</button>
+        <div class="quiz-result" id="quizResult"></div>
+      </div>
+
+      <div class="why-section">
+        <h4>왜 이렇게 만들었을까?</h4>
+        <p>
+          집을 지을 때 지붕부터 올리지 않듯, 소프트웨어도 순서가 중요합니다.
+          먼저 가장 단순한 기능(웹훅 릴레이)을 만들고, 그 위에 추상화(어댑터 인터페이스)를 쌓고,
+          마지막에 복잡한 기능(멀티 에이전트)을 추가합니다. 이것이 <strong>"바텀업 설계(Bottom-Up Design)"</strong>입니다.
+          여러분도 프로젝트를 만들 때, 가장 간단한 것부터 시작하세요!
+        </p>
+      </div>
+    </div>
+  </details>
+</div>
+
+<!-- POPUP -->
+<div class="popup-overlay" id="popup" onclick="if(event.target===this)closePopup()">
+  <div class="popup-card">
+    <h3 id="popupTitle"></h3>
+    <div class="comp-name" id="popupComp"></div>
+    <p id="popupDesc"></p>
+    <button onclick="closePopup()">닫기</button>
+  </div>
+</div>
+
+<script>
+// Room data
+const rooms = {
+  cli: {
+    title: '정문 (CLI Layer)',
+    comp: 'OpenClaw CLI — src/cli/',
+    desc: '사용자가 OpenClaw과 처음 만나는 곳입니다. 터미널에서 명령어를 입력하면 이 정문을 통해 시스템에 들어갑니다. "openclaw start", "openclaw config" 같은 명령어를 처리합니다.'
+  },
+  gateway: {
+    title: '중앙 홀 (Gateway)',
+    comp: 'Gateway Core — src/gateway/',
+    desc: '모든 메시지가 지나가는 중앙 허브입니다. 우체국의 중앙 홀처럼, 어디서 온 메시지든 여기서 분류되고 올바른 목적지로 보내집니다. 라우팅, 세션 관리, 훅 실행을 담당합니다.'
+  },
+  channels: {
+    title: '우편함들 (Channels)',
+    comp: 'Channel Adapters — extensions/channels/',
+    desc: '각 메신저(Slack, Discord, WhatsApp 등)와 연결되는 우편함입니다. 각 우편함은 독립적이라서, 하나가 고장나도 다른 것에 영향을 주지 않습니다. 어댑터 패턴으로 구현됩니다.'
+  },
+  agent: {
+    title: '배달부 사무실 (Agent)',
+    comp: 'Agent System — src/agent/',
+    desc: 'AI가 실제로 일하는 곳입니다. 배달부가 편지를 읽고 답장을 쓰듯, 에이전트는 메시지를 이해하고 응답을 생성합니다. LLM 제공자(Claude, GPT 등)와 연결됩니다.'
+  },
+  plugins: {
+    title: '각 부서 (Plugins)',
+    comp: 'Plugin System — src/plugins/',
+    desc: '특수 업무를 담당하는 부서들입니다. 메모리, 음성, 분석 등 각각의 기능이 독립적인 플러그인으로 존재합니다. Plugin SDK를 사용해 누구나 새 부서를 만들 수 있습니다.'
+  },
+  support: {
+    title: '지원실 (Support Layer)',
+    comp: 'Config, Logger, Events, State, Cron',
+    desc: '모든 부서가 공통으로 사용하는 지원 시설입니다. 설정(Config)은 건물 규칙, 로깅(Logger)은 CCTV, 이벤트(Events)는 방송 시스템, 상태(State)는 출입 기록, 크론(Cron)은 시계입니다.'
+  }
+};
+
+function showRoom(key) {
+  const r = rooms[key];
+  document.getElementById('popupTitle').textContent = r.title;
+  document.getElementById('popupComp').textContent = r.comp;
+  document.getElementById('popupDesc').textContent = r.desc;
+  document.getElementById('popup').classList.add('show');
+}
+
+function showBubble(title, desc) {
+  document.getElementById('popupTitle').textContent = title;
+  document.getElementById('popupComp').textContent = '확장 (Extension)';
+  document.getElementById('popupDesc').textContent = desc;
+  document.getElementById('popup').classList.add('show');
+}
+
+function closePopup() {
+  document.getElementById('popup').classList.remove('show');
+}
+
+// Timeline toggle
+function toggleTl(node) {
+  const wasActive = node.classList.contains('active');
+  document.querySelectorAll('.tl-node').forEach(n => n.classList.remove('active'));
+  if (!wasActive) node.classList.add('active');
+}
+
+// Quiz
+const quizCorrect = [
+  '간단한 웹훅 릴레이',
+  '채널 어댑터 인터페이스',
+  '세션 키 + 라우팅',
+  '설정 시스템 + Zod 검증',
+  '플러그인 생명주기',
+  '훅 시스템 + 도구 레지스트리',
+  '멀티 에이전트 + 서브에이전트'
+];
+
+function initQuiz() {
+  const list = document.getElementById('quizList');
+  // Shuffle
+  const shuffled = quizCorrect.slice();
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  shuffled.forEach((text, i) => {
+    const el = document.createElement('div');
+    el.className = 'quiz-item';
+    el.draggable = true;
+    el.dataset.text = text;
+    el.innerHTML = '<span class="qi-num">' + (i + 1) + '</span><span>' + text + '</span>';
+    el.addEventListener('dragstart', onDragStart);
+    el.addEventListener('dragover', onDragOver);
+    el.addEventListener('drop', onDrop);
+    el.addEventListener('dragend', onDragEnd);
+    el.addEventListener('dragleave', onDragLeave);
+    // Touch support
+    el.addEventListener('touchstart', onTouchStart, {passive: false});
+    el.addEventListener('touchmove', onTouchMove, {passive: false});
+    el.addEventListener('touchend', onTouchEnd);
+    list.appendChild(el);
+  });
+}
+
+let dragItem = null;
+
+function onDragStart(e) {
+  dragItem = this;
+  this.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function onDragOver(e) {
+  e.preventDefault();
+  this.classList.add('over');
+}
+function onDragLeave() { this.classList.remove('over'); }
+function onDragEnd() { this.classList.remove('dragging'); document.querySelectorAll('.quiz-item').forEach(el => el.classList.remove('over')); }
+function onDrop(e) {
+  e.preventDefault();
+  if (dragItem && dragItem !== this) {
+    const list = document.getElementById('quizList');
+    const items = [...list.children];
+    const fromIdx = items.indexOf(dragItem);
+    const toIdx = items.indexOf(this);
+    if (fromIdx < toIdx) {
+      list.insertBefore(dragItem, this.nextSibling);
+    } else {
+      list.insertBefore(dragItem, this);
+    }
+    renumberQuiz();
+  }
+  this.classList.remove('over');
+}
+
+// Touch drag support
+let touchItem = null, touchClone = null, touchStartY = 0;
+function onTouchStart(e) {
+  touchItem = this;
+  touchStartY = e.touches[0].clientY;
+}
+function onTouchMove(e) {
+  e.preventDefault();
+  if (!touchItem) return;
+  const touch = e.touches[0];
+  const list = document.getElementById('quizList');
+  const items = [...list.children];
+  const target = document.elementFromPoint(touch.clientX, touch.clientY);
+  const targetItem = target?.closest?.('.quiz-item');
+  items.forEach(i => i.classList.remove('over'));
+  if (targetItem && targetItem !== touchItem) {
+    targetItem.classList.add('over');
+  }
+}
+function onTouchEnd(e) {
+  if (!touchItem) return;
+  const touch = e.changedTouches[0];
+  const target = document.elementFromPoint(touch.clientX, touch.clientY);
+  const targetItem = target?.closest?.('.quiz-item');
+  if (targetItem && targetItem !== touchItem) {
+    const list = document.getElementById('quizList');
+    const items = [...list.children];
+    const fromIdx = items.indexOf(touchItem);
+    const toIdx = items.indexOf(targetItem);
+    if (fromIdx < toIdx) {
+      list.insertBefore(touchItem, targetItem.nextSibling);
+    } else {
+      list.insertBefore(touchItem, targetItem);
+    }
+    renumberQuiz();
+  }
+  document.querySelectorAll('.quiz-item').forEach(el => el.classList.remove('over'));
+  touchItem = null;
+}
+
+function renumberQuiz() {
+  document.querySelectorAll('#quizList .quiz-item').forEach((el, i) => {
+    el.querySelector('.qi-num').textContent = i + 1;
+  });
+}
+
+function checkQuiz() {
+  const items = [...document.querySelectorAll('#quizList .quiz-item')];
+  const userOrder = items.map(el => el.dataset.text);
+  const isCorrect = userOrder.every((t, i) => t === quizCorrect[i]);
+  const result = document.getElementById('quizResult');
+  result.className = 'quiz-result ' + (isCorrect ? 'correct' : 'wrong');
+  if (isCorrect) {
+    result.textContent = '🎉 정답입니다! 기초부터 차근차근 쌓아 올리는 순서를 정확히 이해하셨네요!';
+  } else {
+    // Show how many are correct
+    let correct = 0;
+    userOrder.forEach((t, i) => { if (t === quizCorrect[i]) correct++; });
+    result.textContent = '아쉽네요! 7개 중 ' + correct + '개가 맞았습니다. 힌트: 가장 간단한 것(웹훅 릴레이)이 첫 번째, 가장 복잡한 것(멀티 에이전트)이 마지막입니다.';
+  }
+}
+
+// Close popup on Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
+
+// Init
+initQuiz();
+</script>
+</body>
+</html>

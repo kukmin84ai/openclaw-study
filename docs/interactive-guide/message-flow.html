@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw 학습 가이드 — 메시지 흐름</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<style>
+/* ── Reset & Base ─────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,system-ui,Roboto,sans-serif;background:#f8f9fc;color:#2d3748;line-height:1.7}
+
+/* ── Nav ──────────────────────────────────── */
+nav{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid #e2e8f0;padding:.75rem 1rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+nav a{text-decoration:none;padding:.45rem .9rem;border-radius:8px;font-size:.9rem;font-weight:500;color:#4a5568;transition:all .2s}
+nav a:hover{background:#edf2f7}
+nav a.current{background:#4299e1;color:#fff}
+nav .logo{font-weight:700;font-size:1rem;margin-right:auto;color:#2b6cb0}
+
+/* ── Container ────────────────────────────── */
+.container{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
+h1{font-size:1.8rem;font-weight:800;margin-bottom:.5rem;color:#1a202c}
+.subtitle{font-size:1rem;color:#718096;margin-bottom:2rem}
+
+/* ── Details / Lessons ────────────────────── */
+details{background:#fff;border-radius:16px;margin-bottom:1.5rem;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden;border:1px solid #e2e8f0}
+details[open]{border-color:#bee3f8}
+summary{cursor:pointer;padding:1.1rem 1.3rem;font-size:1.15rem;font-weight:700;list-style:none;display:flex;align-items:center;gap:.6rem;user-select:none;transition:background .2s}
+summary::-webkit-details-marker{display:none}
+summary::before{content:'▶';font-size:.75rem;transition:transform .25s;color:#a0aec0}
+details[open]>summary::before{transform:rotate(90deg);color:#4299e1}
+summary:hover{background:#f7fafc}
+.lesson-body{padding:1.3rem}
+
+/* ── Cards ────────────────────────────────── */
+.analogy{background:linear-gradient(135deg,#ebf8ff,#f0fff4);border-left:4px solid #4299e1;border-radius:0 12px 12px 0;padding:1rem 1.2rem;margin-bottom:1.2rem;font-size:.95rem}
+.analogy strong{color:#2b6cb0}
+.why-box{background:#fffaf0;border:1px dashed #ed8936;border-radius:12px;padding:1rem 1.2rem;margin-top:1.5rem;font-size:.93rem}
+.why-box h4{color:#c05621;margin-bottom:.4rem}
+
+/* ── Buttons ──────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1.2rem;border:none;border-radius:10px;font-family:inherit;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-blue{background:#4299e1;color:#fff}
+.btn-blue:hover{background:#3182ce}
+.btn-green{background:#48bb78;color:#fff}
+.btn-green:hover{background:#38a169}
+.btn-orange{background:#ed8936;color:#fff}
+.btn-orange:hover{background:#dd6b20}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── SVG area ─────────────────────────────── */
+.svg-wrap{width:100%;overflow-x:auto;margin:1rem 0;-webkit-overflow-scrolling:touch}
+.svg-wrap svg{display:block;margin:0 auto}
+
+/* ── Popup tooltip ────────────────────────── */
+.popup{position:fixed;z-index:200;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:.9rem 1.1rem;box-shadow:0 8px 24px rgba(0,0,0,.12);max-width:300px;font-size:.9rem;line-height:1.6;opacity:0;pointer-events:none;transition:opacity .2s}
+.popup.show{opacity:1;pointer-events:auto}
+.popup .close-popup{position:absolute;top:6px;right:10px;background:none;border:none;font-size:1.1rem;cursor:pointer;color:#a0aec0}
+.popup h5{font-weight:700;margin-bottom:.3rem;color:#2b6cb0}
+
+/* ── Quiz ─────────────────────────────────── */
+.quiz{background:#faf5ff;border:1px solid #d6bcfa;border-radius:14px;padding:1.2rem;margin-top:1.2rem}
+.quiz h4{color:#6b46c1;margin-bottom:.7rem}
+.quiz-option{display:block;width:100%;text-align:left;padding:.6rem 1rem;margin-bottom:.4rem;border:2px solid #e2e8f0;border-radius:10px;background:#fff;font-family:inherit;font-size:.93rem;cursor:pointer;transition:all .2s}
+.quiz-option:hover{border-color:#9f7aea;background:#faf5ff}
+.quiz-option.correct{border-color:#48bb78;background:#f0fff4}
+.quiz-option.wrong{border-color:#fc8181;background:#fff5f5}
+.quiz-result{margin-top:.6rem;font-weight:600;font-size:.95rem}
+
+/* ── Responsive ───────────────────────────── */
+@media(max-width:640px){
+  h1{font-size:1.4rem}
+  .lesson-body{padding:1rem .8rem}
+  nav{padding:.5rem .6rem}
+  nav a{padding:.35rem .6rem;font-size:.82rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════ NAV ════════ -->
+<nav>
+  <span class="logo">OpenClaw 학습</span>
+  <a href="index.html">전체 지도</a>
+  <a href="message-flow.html" class="current">흐름</a>
+  <a href="systems.html">시스템</a>
+</nav>
+
+<div class="container">
+<h1>메시지 흐름 &amp; 에이전트</h1>
+<p class="subtitle">메시지가 어떻게 여행하는지, 훅이 뭔지, 에이전트가 어떻게 동작하는지 알아봅시다.</p>
+
+<!-- ════════════════════════════════════════════
+     LESSON 2: 메시지 흐름
+     ════════════════════════════════════════════ -->
+<details open>
+<summary>레슨 2: 메시지 흐름 (Message Flow Pipeline)</summary>
+<div class="lesson-body">
+
+<div class="analogy">
+<strong>비유: 식당 주문</strong><br>
+손님(Slack)이 웨이터(채널 어댑터)에게 주문을 하면, 식당 매니저(Gateway)가 주문을 정리하고, 주방장(에이전트)이 요리하고, 다시 웨이터가 손님에게 배달합니다.
+</div>
+
+<p style="margin-bottom:.8rem">아래 파이프라인에서 <strong>"메시지 보내기"</strong> 버튼을 눌러 메시지가 흐르는 과정을 직접 확인해 보세요.</p>
+
+<div class="svg-wrap">
+<svg id="pipeline-svg" viewBox="0 0 880 520" width="880" height="520" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+  <!-- Background -->
+  <rect width="880" height="520" rx="16" fill="#f7fafc"/>
+
+  <!-- ── Path (the dot will travel along this) ── -->
+  <path id="msg-path" d="M 80,80 L 80,155 L 80,230 L 80,305 L 440,305 L 440,230 L 440,155 L 800,155 L 800,230" fill="none" stroke="#cbd5e0" stroke-width="2" stroke-dasharray="6,4"/>
+
+  <!-- Stage 1: 외부 플랫폼 -->
+  <rect x="20" y="50" width="120" height="60" rx="12" fill="#bee3f8" stroke="#4299e1" stroke-width="2"/>
+  <text x="80" y="76" text-anchor="middle" font-size="13" font-weight="700" fill="#2b6cb0">외부 플랫폼</text>
+  <text x="80" y="95" text-anchor="middle" font-size="10" fill="#4a5568">손님 (Slack 등)</text>
+
+  <!-- Stage 2: 채널 어댑터 -->
+  <rect x="20" y="125" width="120" height="60" rx="12" fill="#bee3f8" stroke="#4299e1" stroke-width="2"/>
+  <text x="80" y="151" text-anchor="middle" font-size="13" font-weight="700" fill="#2b6cb0">채널 어댑터</text>
+  <text x="80" y="170" text-anchor="middle" font-size="10" fill="#4a5568">웨이터 (수신)</text>
+
+  <!-- Stage 3: Gateway -->
+  <rect x="20" y="200" width="120" height="60" rx="12" fill="#fefcbf" stroke="#ed8936" stroke-width="2"/>
+  <text x="80" y="226" text-anchor="middle" font-size="13" font-weight="700" fill="#c05621">Gateway 서버</text>
+  <text x="80" y="245" text-anchor="middle" font-size="10" fill="#4a5568">식당 매니저</text>
+
+  <!-- Stage 4: Hooks -->
+  <rect x="20" y="275" width="120" height="60" rx="12" fill="#fefcbf" stroke="#ed8936" stroke-width="2"/>
+  <text x="80" y="296" text-anchor="middle" font-size="12" font-weight="700" fill="#c05621">훅 실행</text>
+  <text x="80" y="314" text-anchor="middle" font-size="9" fill="#4a5568">inbound_claim</text>
+  <text x="80" y="326" text-anchor="middle" font-size="9" fill="#4a5568">message_received</text>
+
+  <!-- Stage 5: Route -->
+  <rect x="380" y="275" width="120" height="60" rx="12" fill="#fefcbf" stroke="#ed8936" stroke-width="2"/>
+  <text x="440" y="296" text-anchor="middle" font-size="12" font-weight="700" fill="#c05621">라우트 해석</text>
+  <text x="440" y="316" text-anchor="middle" font-size="10" fill="#4a5568">좌석 배정</text>
+
+  <!-- Stage 6: Agent -->
+  <rect x="380" y="200" width="120" height="60" rx="12" fill="#fefcbf" stroke="#ed8936" stroke-width="2"/>
+  <text x="440" y="224" text-anchor="middle" font-size="13" font-weight="700" fill="#c05621">에이전트 실행</text>
+  <text x="440" y="244" text-anchor="middle" font-size="10" fill="#4a5568">주방장 요리</text>
+
+  <!-- Stage 7: State Machine -->
+  <rect x="380" y="125" width="120" height="60" rx="12" fill="#c6f6d5" stroke="#48bb78" stroke-width="2"/>
+  <text x="440" y="148" text-anchor="middle" font-size="12" font-weight="700" fill="#276749">상태 머신</text>
+  <text x="440" y="167" text-anchor="middle" font-size="10" fill="#4a5568">Draft→Stream→Send</text>
+
+  <!-- Stage 8: 응답 전송 -->
+  <rect x="740" y="125" width="120" height="60" rx="12" fill="#c6f6d5" stroke="#48bb78" stroke-width="2"/>
+  <text x="800" y="151" text-anchor="middle" font-size="13" font-weight="700" fill="#276749">응답 전송</text>
+  <text x="800" y="170" text-anchor="middle" font-size="10" fill="#4a5568">배달 완료!</text>
+
+  <!-- Final: 채널로 돌아감 -->
+  <rect x="740" y="200" width="120" height="60" rx="12" fill="#c6f6d5" stroke="#48bb78" stroke-width="2"/>
+  <text x="800" y="226" text-anchor="middle" font-size="13" font-weight="700" fill="#276749">채널 응답</text>
+  <text x="800" y="245" text-anchor="middle" font-size="10" fill="#4a5568">손님에게 전달</text>
+
+  <!-- Arrows -->
+  <line x1="80" y1="110" x2="80" y2="125" stroke="#a0aec0" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="80" y1="185" x2="80" y2="200" stroke="#a0aec0" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="80" y1="260" x2="80" y2="275" stroke="#a0aec0" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="140" y1="305" x2="380" y2="305" stroke="#a0aec0" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="440" y1="275" x2="440" y2="260" stroke="#a0aec0" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="440" y1="200" x2="440" y2="185" stroke="#a0aec0" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="500" y1="155" x2="740" y2="155" stroke="#a0aec0" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="800" y1="185" x2="800" y2="200" stroke="#a0aec0" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Arrow marker -->
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#a0aec0"/>
+    </marker>
+  </defs>
+
+  <!-- Animated dot (hidden initially) -->
+  <circle id="msg-dot" cx="80" cy="80" r="8" fill="#e53e3e" opacity="0">
+    <animate id="dot-glow" attributeName="r" values="8;11;8" dur="0.6s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Legend -->
+  <rect x="600" y="280" width="14" height="14" rx="3" fill="#bee3f8"/>
+  <text x="620" y="292" font-size="11" fill="#4a5568">입력 (파랑)</text>
+  <rect x="600" y="302" width="14" height="14" rx="3" fill="#fefcbf"/>
+  <text x="620" y="314" font-size="11" fill="#4a5568">처리 (주황)</text>
+  <rect x="600" y="324" width="14" height="14" rx="3" fill="#c6f6d5"/>
+  <text x="620" y="336" font-size="11" fill="#4a5568">출력 (초록)</text>
+</svg>
+</div>
+
+<div style="text-align:center;margin-bottom:1rem">
+  <button class="btn btn-blue" id="btn-send-msg">메시지 보내기</button>
+</div>
+
+<!-- Popup container -->
+<div class="popup" id="pipeline-popup"><button class="close-popup" onclick="hidePipelinePopup()">&times;</button><h5 id="pp-title"></h5><p id="pp-desc"></p></div>
+
+<div class="why-box">
+<h4>왜 이렇게 만들었을까?</h4>
+<p>메시지를 여러 단계로 나누면 각 단계를 독립적으로 테스트하고 교체할 수 있습니다. 예를 들어 Slack 대신 Discord를 쓰고 싶으면 "채널 어댑터"만 바꾸면 되고, 나머지는 그대로입니다. 이것을 <strong>관심사의 분리(Separation of Concerns)</strong>라고 부릅니다.</p>
+</div>
+
+</div>
+</details>
+
+<!-- ════════════════════════════════════════════
+     LESSON 6: 훅 생명주기
+     ════════════════════════════════════════════ -->
+<details>
+<summary>레슨 6: 훅 생명주기 (Hook Lifecycle)</summary>
+<div class="lesson-body">
+
+<div class="analogy">
+<strong>비유: 지하철 노선도</strong><br>
+각 역(hook)에서 승객(플러그인)이 타고 내립니다. 메인 노선을 따라가다가, 특정 역에서 갈라지는 지선(도구, 압축, 서브에이전트)도 있습니다.
+</div>
+
+<p style="margin-bottom:.8rem">역을 클릭하면 설명이 나옵니다. <strong>"열차 출발"</strong> 버튼으로 열차가 달리는 것을 확인하세요!</p>
+
+<div class="svg-wrap">
+<svg id="subway-svg" viewBox="0 0 900 560" width="900" height="560" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+  <rect width="900" height="560" rx="16" fill="#f7fafc"/>
+
+  <!-- ── MAIN LINE (green) ── -->
+  <polyline id="main-line" points="60,60 160,60 260,60 360,60 460,60 460,130 460,200 560,200 660,200" fill="none" stroke="#48bb78" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- ── TOOL BRANCH (orange) from llm_output (660,200) ── -->
+  <polyline id="tool-line" points="660,200 660,290 760,290 860,290 860,200 660,200" fill="none" stroke="#ed8936" stroke-width="3" stroke-dasharray="8,4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- ── COMPACTION BRANCH (purple) from before_prompt_build (460,200) ── -->
+  <polyline id="compact-line" points="460,200 360,290 260,290 260,200 460,200" fill="none" stroke="#9f7aea" stroke-width="3" stroke-dasharray="8,4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- ── SUBAGENT BRANCH (blue) from before_agent_start (460,60) ── -->
+  <polyline id="sub-line" points="460,60 560,60 660,60 760,60" fill="none" stroke="#4299e1" stroke-width="3" stroke-dasharray="8,4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- ── OUTPUT LINE (red) from llm_output (660,200) ── -->
+  <polyline id="out-line" points="660,200 660,380 560,380 460,380 360,380 260,380 160,380 60,380" fill="none" stroke="#fc8181" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- ── STATIONS ── -->
+  <!-- Main line -->
+  <circle class="station" data-hook="gateway_start" cx="60" cy="60" r="10" fill="#48bb78" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="60" y="42" text-anchor="middle" font-size="9" font-weight="600" fill="#276749">gateway_start</text>
+
+  <circle class="station" data-hook="session_start" cx="160" cy="60" r="10" fill="#48bb78" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="160" y="42" text-anchor="middle" font-size="9" font-weight="600" fill="#276749">session_start</text>
+
+  <circle class="station" data-hook="message_received" cx="260" cy="60" r="10" fill="#48bb78" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="260" y="42" text-anchor="middle" font-size="9" font-weight="600" fill="#276749">message_received</text>
+
+  <circle class="station" data-hook="inbound_claim" cx="360" cy="60" r="10" fill="#48bb78" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="360" y="42" text-anchor="middle" font-size="9" font-weight="600" fill="#276749">inbound_claim</text>
+
+  <circle class="station" data-hook="before_agent_start" cx="460" cy="60" r="10" fill="#48bb78" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="460" y="42" text-anchor="middle" font-size="9" font-weight="600" fill="#276749">before_agent_start</text>
+
+  <circle class="station" data-hook="before_model_resolve" cx="460" cy="130" r="10" fill="#48bb78" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="462" y="122" text-anchor="start" font-size="9" font-weight="600" fill="#276749">before_model_resolve</text>
+
+  <circle class="station" data-hook="before_prompt_build" cx="460" cy="200" r="10" fill="#48bb78" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="400" y="218" text-anchor="middle" font-size="9" font-weight="600" fill="#276749">before_prompt_build</text>
+
+  <circle class="station" data-hook="llm_input" cx="560" cy="200" r="10" fill="#48bb78" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="560" y="222" text-anchor="middle" font-size="9" font-weight="600" fill="#276749">llm_input</text>
+
+  <circle class="station" data-hook="llm_output" cx="660" cy="200" r="10" fill="#48bb78" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="660" y="222" text-anchor="middle" font-size="9" font-weight="600" fill="#276749">llm_output</text>
+
+  <!-- Tool branch -->
+  <circle class="station" data-hook="before_tool_call" cx="660" cy="290" r="9" fill="#ed8936" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="660" y="312" text-anchor="middle" font-size="8.5" font-weight="600" fill="#c05621">before_tool_call</text>
+
+  <circle class="station" data-hook="after_tool_call" cx="760" cy="290" r="9" fill="#ed8936" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="760" y="312" text-anchor="middle" font-size="8.5" font-weight="600" fill="#c05621">after_tool_call</text>
+
+  <circle class="station" data-hook="tool_result_persist" cx="860" cy="290" r="9" fill="#ed8936" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="860" y="312" text-anchor="middle" font-size="8.5" font-weight="600" fill="#c05621">tool_result_persist</text>
+
+  <!-- Compaction branch -->
+  <circle class="station" data-hook="before_compaction" cx="360" cy="290" r="9" fill="#9f7aea" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="360" y="312" text-anchor="middle" font-size="8.5" font-weight="600" fill="#6b46c1">before_compaction</text>
+
+  <circle class="station" data-hook="after_compaction" cx="260" cy="290" r="9" fill="#9f7aea" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="260" y="312" text-anchor="middle" font-size="8.5" font-weight="600" fill="#6b46c1">after_compaction</text>
+
+  <!-- Subagent branch -->
+  <circle class="station" data-hook="subagent_spawning" cx="560" cy="60" r="9" fill="#4299e1" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="560" y="82" text-anchor="middle" font-size="8.5" font-weight="600" fill="#2b6cb0">subagent_spawning</text>
+
+  <circle class="station" data-hook="subagent_delivery" cx="660" cy="60" r="9" fill="#4299e1" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="660" y="82" text-anchor="middle" font-size="8" font-weight="600" fill="#2b6cb0">delivery_target</text>
+
+  <circle class="station" data-hook="subagent_spawned" cx="760" cy="60" r="9" fill="#4299e1" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="760" y="82" text-anchor="middle" font-size="8.5" font-weight="600" fill="#2b6cb0">subagent_spawned</text>
+
+  <!-- extra subagent_ended below -->
+  <line x1="760" y1="60" x2="760" y2="110" stroke="#4299e1" stroke-width="3" stroke-dasharray="8,4"/>
+  <circle class="station" data-hook="subagent_ended" cx="760" cy="110" r="9" fill="#4299e1" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="770" y="124" font-size="8.5" font-weight="600" fill="#2b6cb0">subagent_ended</text>
+
+  <!-- Output line -->
+  <circle class="station" data-hook="before_message_write" cx="660" cy="380" r="10" fill="#fc8181" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="660" y="402" text-anchor="middle" font-size="8.5" font-weight="600" fill="#c53030">before_message_write</text>
+
+  <circle class="station" data-hook="message_sending" cx="560" cy="380" r="10" fill="#fc8181" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="560" y="402" text-anchor="middle" font-size="8.5" font-weight="600" fill="#c53030">message_sending</text>
+
+  <circle class="station" data-hook="message_sent" cx="460" cy="380" r="10" fill="#fc8181" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="460" y="402" text-anchor="middle" font-size="8.5" font-weight="600" fill="#c53030">message_sent</text>
+
+  <circle class="station" data-hook="agent_end" cx="360" cy="380" r="10" fill="#fc8181" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="360" y="402" text-anchor="middle" font-size="8.5" font-weight="600" fill="#c53030">agent_end</text>
+
+  <circle class="station" data-hook="session_end" cx="260" cy="380" r="10" fill="#fc8181" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="260" y="402" text-anchor="middle" font-size="8.5" font-weight="600" fill="#c53030">session_end</text>
+
+  <circle class="station" data-hook="gateway_stop" cx="160" cy="380" r="10" fill="#fc8181" stroke="#fff" stroke-width="2" style="cursor:pointer"/>
+  <text x="160" y="402" text-anchor="middle" font-size="8.5" font-weight="600" fill="#c53030">gateway_stop</text>
+
+  <!-- Legend -->
+  <rect x="30" y="440" width="840" height="100" rx="12" fill="#edf2f7"/>
+  <text x="50" y="464" font-size="12" font-weight="700" fill="#2d3748">노선 안내</text>
+  <line x1="50" y1="482" x2="90" y2="482" stroke="#48bb78" stroke-width="4"/><text x="98" y="486" font-size="10" fill="#4a5568">메인 노선 (초록)</text>
+  <line x1="50" y1="502" x2="90" y2="502" stroke="#ed8936" stroke-width="3" stroke-dasharray="8,4"/><text x="98" y="506" font-size="10" fill="#4a5568">도구 지선 (주황)</text>
+  <line x1="250" y1="482" x2="290" y2="482" stroke="#9f7aea" stroke-width="3" stroke-dasharray="8,4"/><text x="298" y="486" font-size="10" fill="#4a5568">압축 지선 (보라)</text>
+  <line x1="250" y1="502" x2="290" y2="502" stroke="#4299e1" stroke-width="3" stroke-dasharray="8,4"/><text x="298" y="506" font-size="10" fill="#4a5568">서브에이전트 지선 (파랑)</text>
+  <line x1="500" y1="482" x2="540" y2="482" stroke="#fc8181" stroke-width="4"/><text x="548" y="486" font-size="10" fill="#4a5568">출력 노선 (빨강)</text>
+
+  <!-- Train dot -->
+  <circle id="train-dot" cx="60" cy="60" r="7" fill="#e53e3e" opacity="0">
+    <animate attributeName="r" values="7;10;7" dur="0.5s" repeatCount="indefinite"/>
+  </circle>
+</svg>
+</div>
+
+<div style="text-align:center;margin-bottom:1rem">
+  <button class="btn btn-green" id="btn-train">열차 출발</button>
+</div>
+
+<div class="popup" id="hook-popup"><button class="close-popup" onclick="hideHookPopup()">&times;</button><h5 id="hp-title"></h5><p id="hp-desc"></p></div>
+
+<div class="why-box">
+<h4>왜 이렇게 만들었을까?</h4>
+<p>훅 시스템 덕분에 OpenClaw의 핵심 코드를 수정하지 않고도 플러그인이 메시지 흐름의 원하는 시점에 끼어들 수 있습니다. 지하철 역에서 승객이 자유롭게 타고 내리듯, 플러그인도 필요한 훅에만 등록하면 됩니다.</p>
+</div>
+
+</div>
+</details>
+
+<!-- ════════════════════════════════════════════
+     LESSON 7: 에이전트와 세션
+     ════════════════════════════════════════════ -->
+<details>
+<summary>레슨 7: 에이전트와 세션 (Agent &amp; Session)</summary>
+<div class="lesson-body">
+
+<div class="analogy">
+<strong>비유: 학교</strong><br>
+교무실(라우팅)이 학생의 반을 배정하고, 학생증(세션 키)으로 신분을 확인하고, 담임선생님(에이전트)이 수업을 진행합니다.
+</div>
+
+<!-- Section 1: Route Resolution -->
+<h3 style="margin:1.2rem 0 .8rem;color:#2b6cb0">1. 라우트 해석 (교무실)</h3>
+<p style="margin-bottom:.8rem">메시지가 도착하면 "이 메시지를 어떤 에이전트가 처리할까?"를 결정합니다. 우선순위가 높은 바인딩부터 확인합니다.</p>
+
+<div class="svg-wrap">
+<svg viewBox="0 0 400 340" width="400" height="340" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+  <rect width="400" height="340" rx="12" fill="#f7fafc"/>
+  <!-- Funnel -->
+  <polygon points="60,30 340,30 300,70 100,70" fill="#fed7d7" stroke="#fc8181" stroke-width="1.5"/>
+  <text x="200" y="56" text-anchor="middle" font-size="12" font-weight="700" fill="#c53030">peer (1:1 직접 지정)</text>
+
+  <polygon points="100,75 300,75 280,115 120,115" fill="#feebc8" stroke="#ed8936" stroke-width="1.5"/>
+  <text x="200" y="100" text-anchor="middle" font-size="12" font-weight="700" fill="#c05621">parent (부모 에이전트)</text>
+
+  <polygon points="120,120 280,120 265,160 135,160" fill="#fefcbf" stroke="#d69e2e" stroke-width="1.5"/>
+  <text x="200" y="145" text-anchor="middle" font-size="12" font-weight="700" fill="#975a16">guild + roles</text>
+
+  <polygon points="135,165 265,165 250,205 150,205" fill="#c6f6d5" stroke="#48bb78" stroke-width="1.5"/>
+  <text x="200" y="190" text-anchor="middle" font-size="12" font-weight="700" fill="#276749">account (계정)</text>
+
+  <polygon points="150,210 250,210 240,250 160,250" fill="#bee3f8" stroke="#4299e1" stroke-width="1.5"/>
+  <text x="200" y="235" text-anchor="middle" font-size="12" font-weight="700" fill="#2b6cb0">channel (채널)</text>
+
+  <polygon points="160,255 240,255 220,295 180,295" fill="#e9d8fd" stroke="#9f7aea" stroke-width="1.5"/>
+  <text x="200" y="280" text-anchor="middle" font-size="12" font-weight="700" fill="#6b46c1">default</text>
+
+  <text x="200" y="325" text-anchor="middle" font-size="11" fill="#718096">위에서 아래로 매칭 (첫 번째 일치 사용)</text>
+</svg>
+</div>
+
+<!-- Section 2: Session Key -->
+<h3 style="margin:1.2rem 0 .8rem;color:#2b6cb0">2. 세션 키 구조 (학생증)</h3>
+<p style="margin-bottom:.8rem">세션 키는 "이 대화가 어떤 맥락인지"를 나타냅니다. 4가지 패턴이 있습니다.</p>
+
+<div class="svg-wrap">
+<svg viewBox="0 0 800 220" width="800" height="220" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+  <rect width="800" height="220" rx="12" fill="#f7fafc"/>
+
+  <!-- DM Card -->
+  <rect x="20" y="20" width="175" height="180" rx="12" fill="#ebf8ff" stroke="#4299e1" stroke-width="2"/>
+  <text x="107" y="48" text-anchor="middle" font-size="13" font-weight="700" fill="#2b6cb0">DM (1:1)</text>
+  <rect x="35" y="60" width="145" height="40" rx="8" fill="#fff" stroke="#bee3f8" stroke-width="1"/>
+  <text x="107" y="76" text-anchor="middle" font-size="9" fill="#4a5568">channel:account</text>
+  <text x="107" y="92" text-anchor="middle" font-size="8" fill="#a0aec0">slack:user123</text>
+  <text x="107" y="125" text-anchor="middle" font-size="10" fill="#4a5568">철수와 봇의</text>
+  <text x="107" y="142" text-anchor="middle" font-size="10" fill="#4a5568">1:1 대화</text>
+  <text x="107" y="180" text-anchor="middle" font-size="18">💬</text>
+
+  <!-- Group Card -->
+  <rect x="215" y="20" width="175" height="180" rx="12" fill="#f0fff4" stroke="#48bb78" stroke-width="2"/>
+  <text x="302" y="48" text-anchor="middle" font-size="13" font-weight="700" fill="#276749">Group (그룹)</text>
+  <rect x="230" y="60" width="145" height="40" rx="8" fill="#fff" stroke="#c6f6d5" stroke-width="1"/>
+  <text x="302" y="76" text-anchor="middle" font-size="9" fill="#4a5568">channel:guild</text>
+  <text x="302" y="92" text-anchor="middle" font-size="8" fill="#a0aec0">discord:server456</text>
+  <text x="302" y="125" text-anchor="middle" font-size="10" fill="#4a5568">서버 전체가</text>
+  <text x="302" y="142" text-anchor="middle" font-size="10" fill="#4a5568">하나의 세션</text>
+  <text x="302" y="180" text-anchor="middle" font-size="18">👥</text>
+
+  <!-- Thread Card -->
+  <rect x="410" y="20" width="175" height="180" rx="12" fill="#fffaf0" stroke="#ed8936" stroke-width="2"/>
+  <text x="497" y="48" text-anchor="middle" font-size="13" font-weight="700" fill="#c05621">Thread (스레드)</text>
+  <rect x="425" y="60" width="145" height="40" rx="8" fill="#fff" stroke="#feebc8" stroke-width="1"/>
+  <text x="497" y="76" text-anchor="middle" font-size="9" fill="#4a5568">channel:thread_id</text>
+  <text x="497" y="92" text-anchor="middle" font-size="8" fill="#a0aec0">slack:t_789</text>
+  <text x="497" y="125" text-anchor="middle" font-size="10" fill="#4a5568">스레드마다</text>
+  <text x="497" y="142" text-anchor="middle" font-size="10" fill="#4a5568">별도 대화</text>
+  <text x="497" y="180" text-anchor="middle" font-size="18">🧵</text>
+
+  <!-- Global Card -->
+  <rect x="605" y="20" width="175" height="180" rx="12" fill="#faf5ff" stroke="#9f7aea" stroke-width="2"/>
+  <text x="692" y="48" text-anchor="middle" font-size="13" font-weight="700" fill="#6b46c1">Global (전역)</text>
+  <rect x="620" y="60" width="145" height="40" rx="8" fill="#fff" stroke="#e9d8fd" stroke-width="1"/>
+  <text x="692" y="76" text-anchor="middle" font-size="9" fill="#4a5568">agent:global</text>
+  <text x="692" y="92" text-anchor="middle" font-size="8" fill="#a0aec0">bot:shared</text>
+  <text x="692" y="125" text-anchor="middle" font-size="10" fill="#4a5568">모든 사용자가</text>
+  <text x="692" y="142" text-anchor="middle" font-size="10" fill="#4a5568">공유하는 세션</text>
+  <text x="692" y="180" text-anchor="middle" font-size="18">🌍</text>
+</svg>
+</div>
+
+<!-- Section 3: Agent Execution -->
+<h3 style="margin:1.2rem 0 .8rem;color:#2b6cb0">3. 에이전트 실행 (담임선생님)</h3>
+<p style="margin-bottom:.8rem">에이전트는 LLM(AI 두뇌)을 호출하고, 필요하면 도구를 사용하고, 서브에이전트(보조교사)에게 일을 나눠줄 수 있습니다.</p>
+
+<div class="svg-wrap">
+<svg viewBox="0 0 600 280" width="600" height="280" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto">
+  <rect width="600" height="280" rx="12" fill="#f7fafc"/>
+
+  <!-- Main Agent -->
+  <rect x="180" y="20" width="240" height="80" rx="14" fill="#ebf8ff" stroke="#4299e1" stroke-width="2"/>
+  <text x="300" y="50" text-anchor="middle" font-size="14" font-weight="700" fill="#2b6cb0">메인 에이전트 (담임)</text>
+  <text x="300" y="72" text-anchor="middle" font-size="11" fill="#4a5568">시스템 프롬프트 + LLM + 도구</text>
+  <text x="300" y="90" text-anchor="middle" font-size="11" fill="#718096">persona, model, tools 설정</text>
+
+  <!-- Tools -->
+  <rect x="20" y="140" width="130" height="55" rx="10" fill="#fefcbf" stroke="#d69e2e" stroke-width="1.5"/>
+  <text x="85" y="164" text-anchor="middle" font-size="12" font-weight="600" fill="#975a16">도구 (Tools)</text>
+  <text x="85" y="182" text-anchor="middle" font-size="9" fill="#4a5568">검색, 계산, API...</text>
+  <line x1="180" y1="80" x2="150" y2="140" stroke="#a0aec0" stroke-width="1.5"/>
+
+  <!-- Subagent 1 -->
+  <rect x="180" y="150" width="130" height="55" rx="10" fill="#f0fff4" stroke="#48bb78" stroke-width="1.5"/>
+  <text x="245" y="172" text-anchor="middle" font-size="11" font-weight="600" fill="#276749">서브에이전트 A</text>
+  <text x="245" y="190" text-anchor="middle" font-size="9" fill="#4a5568">번역 전문</text>
+  <line x1="280" y1="100" x2="260" y2="150" stroke="#a0aec0" stroke-width="1.5"/>
+
+  <!-- Subagent 2 -->
+  <rect x="340" y="150" width="130" height="55" rx="10" fill="#faf5ff" stroke="#9f7aea" stroke-width="1.5"/>
+  <text x="405" y="172" text-anchor="middle" font-size="11" font-weight="600" fill="#6b46c1">서브에이전트 B</text>
+  <text x="405" y="190" text-anchor="middle" font-size="9" fill="#4a5568">코드 분석 전문</text>
+  <line x1="340" y1="100" x2="380" y2="150" stroke="#a0aec0" stroke-width="1.5"/>
+
+  <!-- LLM -->
+  <rect x="500" y="140" width="80" height="55" rx="10" fill="#fed7d7" stroke="#fc8181" stroke-width="1.5"/>
+  <text x="540" y="164" text-anchor="middle" font-size="12" font-weight="600" fill="#c53030">LLM</text>
+  <text x="540" y="182" text-anchor="middle" font-size="9" fill="#4a5568">AI 두뇌</text>
+  <line x1="420" y1="70" x2="500" y2="155" stroke="#a0aec0" stroke-width="1.5"/>
+
+  <text x="300" y="240" text-anchor="middle" font-size="11" fill="#718096">담임선생님이 직접 수업하거나, 보조교사에게 특정 과목을 맡길 수 있습니다.</text>
+  <text x="300" y="260" text-anchor="middle" font-size="11" fill="#718096">서브에이전트도 자신만의 LLM과 도구를 가집니다.</text>
+</svg>
+</div>
+
+<!-- Quiz -->
+<div class="quiz">
+<h4>미니 퀴즈: 이 메시지는 어떤 세션으로?</h4>
+<p id="quiz-scenario" style="margin-bottom:.7rem;font-weight:600;color:#2d3748"></p>
+<div id="quiz-options"></div>
+<p class="quiz-result" id="quiz-result"></p>
+<button class="btn btn-orange" id="btn-next-quiz" style="margin-top:.6rem">다음 문제</button>
+</div>
+
+<div class="why-box">
+<h4>왜 이렇게 만들었을까?</h4>
+<p>바인딩 우선순위 덕분에 "이 특정 사용자에게만 다른 에이전트를 연결"하는 것이 가능합니다. 학교에서 특정 학생에게 특별 담임을 배정하는 것처럼요. 세션 키 패턴이 다양한 이유는 DM, 그룹 채팅, 스레드 등 다양한 대화 형태를 모두 지원하기 위해서입니다.</p>
+</div>
+
+</div>
+</details>
+
+</div><!-- /container -->
+
+<!-- ════════════════════════════════════════════
+     ALL JAVASCRIPT
+     ════════════════════════════════════════════ -->
+<script>
+(function(){
+"use strict";
+
+/* ─── Lesson 2: Pipeline Animation ─── */
+const pipelineStages = [
+  {x:80,y:80,title:"외부 플랫폼 (손님)",desc:"Slack, Discord, Telegram 같은 메신저에서 사용자가 메시지를 보냅니다."},
+  {x:80,y:155,title:"채널 어댑터 (웨이터)",desc:"각 플랫폼의 Webhook이나 WebSocket을 통해 메시지를 받아들입니다. 어떤 식당에서 왔는지 구분하는 역할이에요."},
+  {x:80,y:230,title:"Gateway 서버 (식당 매니저)",desc:"다양한 형태의 메시지를 하나의 통일된 형식으로 바꿉니다. 한식, 양식, 중식 주문서를 모두 같은 양식으로 정리하는 거죠."},
+  {x:80,y:305,title:"훅 실행 (주문 확인)",desc:"inbound_claim과 message_received 훅이 실행됩니다. 플러그인들이 메시지를 먼저 확인하거나 수정할 수 있어요."},
+  {x:440,y:305,title:"라우트 해석 (좌석 배정)",desc:"바인딩 우선순위에 따라 어떤 에이전트가 처리할지, 어떤 세션에 속하는지 결정합니다."},
+  {x:440,y:230,title:"에이전트 실행 (주방장 요리)",desc:"선택된 에이전트가 LLM을 호출하고, 필요하면 도구를 사용해 응답을 만듭니다."},
+  {x:440,y:155,title:"상태 머신 (서빙 준비)",desc:"응답은 Draft(초안) → Stream(스트리밍) → Send(전송) 상태를 거칩니다."},
+  {x:800,y:155,title:"응답 전송 (배달)",desc:"완성된 응답이 채널 어댑터를 통해 원래 플랫폼으로 전송됩니다."},
+  {x:800,y:230,title:"채널 응답 (배달 완료!)",desc:"사용자에게 최종 답변이 도착했습니다! 전체 과정이 보통 수 초 내에 완료됩니다."}
+];
+
+const dot=document.getElementById("msg-dot");
+const popup=document.getElementById("pipeline-popup");
+const ppTitle=document.getElementById("pp-title");
+const ppDesc=document.getElementById("pp-desc");
+let animRunning=false;
+
+function showPipelinePopup(stage,cx,cy){
+  ppTitle.textContent=stage.title;
+  ppDesc.textContent=stage.desc;
+  const svgRect=document.getElementById("pipeline-svg").getBoundingClientRect();
+  let left=svgRect.left+cx*svgRect.width/880-60;
+  let top=svgRect.top+cy*svgRect.height/520-80;
+  if(left<10)left=10;
+  if(left+300>window.innerWidth)left=window.innerWidth-310;
+  if(top<10)top=svgRect.top+cy*svgRect.height/520+20;
+  popup.style.left=left+"px";popup.style.top=top+"px";
+  popup.classList.add("show");
+}
+window.hidePipelinePopup=function(){popup.classList.remove("show")};
+
+document.getElementById("btn-send-msg").addEventListener("click",function(){
+  if(animRunning)return;
+  animRunning=true;this.disabled=true;
+  dot.setAttribute("opacity","1");
+  let i=0;
+  function next(){
+    if(i>=pipelineStages.length){dot.setAttribute("opacity","0");hidePipelinePopup();animRunning=false;document.getElementById("btn-send-msg").disabled=false;return;}
+    const s=pipelineStages[i];
+    dot.setAttribute("cx",s.x);dot.setAttribute("cy",s.y);
+    showPipelinePopup(s,s.x,s.y);
+    i++;
+    setTimeout(next, i===pipelineStages.length?1200:1400);
+  }
+  next();
+});
+
+/* ─── Lesson 6: Hook Subway ─── */
+const hookInfo={
+  gateway_start:{title:"gateway_start",desc:"게이트웨이 서버가 시작될 때 호출됩니다. 초기 설정이나 외부 서비스 연결을 할 수 있어요."},
+  session_start:{title:"session_start",desc:"새 세션이 시작될 때 호출됩니다. 사용자별 설정을 불러올 수 있어요."},
+  message_received:{title:"message_received",desc:"메시지가 도착했을 때 호출됩니다. 메시지를 기록하거나 필터링할 수 있어요."},
+  inbound_claim:{title:"inbound_claim",desc:"수신 메시지의 소유권을 주장합니다. 어떤 에이전트가 이 메시지를 처리할지 결정하는 첫 단계예요."},
+  before_agent_start:{title:"before_agent_start",desc:"에이전트 실행 직전에 호출됩니다. 에이전트 설정을 마지막으로 수정할 기회예요."},
+  before_model_resolve:{title:"before_model_resolve",desc:"LLM 모델을 결정하기 직전에 호출됩니다. 상황에 따라 다른 모델을 쓸 수 있게 해줘요."},
+  before_prompt_build:{title:"before_prompt_build",desc:"프롬프트를 조립하기 직전입니다. 시스템 프롬프트에 추가 지시를 넣을 수 있어요."},
+  llm_input:{title:"llm_input",desc:"LLM에 보내기 직전의 최종 입력입니다. 마지막 수정 기회!"},
+  llm_output:{title:"llm_output",desc:"LLM이 응답을 반환한 직후입니다. 응답을 후처리할 수 있어요."},
+  before_tool_call:{title:"before_tool_call",desc:"도구를 호출하기 직전입니다. 특정 도구 호출을 차단하거나 매개변수를 수정할 수 있어요."},
+  after_tool_call:{title:"after_tool_call",desc:"도구 호출이 끝난 직후입니다. 결과를 확인하거나 변환할 수 있어요."},
+  tool_result_persist:{title:"tool_result_persist",desc:"도구 결과를 저장할 때 호출됩니다. 캐싱하거나 로깅할 수 있어요. 처리 후 다시 llm_output으로 돌아갑니다."},
+  before_compaction:{title:"before_compaction",desc:"대화가 길어져 압축이 필요할 때 호출됩니다. 압축 방식을 커스터마이즈할 수 있어요."},
+  after_compaction:{title:"after_compaction",desc:"압축이 완료된 후 호출됩니다. 압축 결과를 확인하고 before_prompt_build로 돌아갑니다."},
+  subagent_spawning:{title:"subagent_spawning",desc:"서브에이전트를 생성하려 할 때 호출됩니다. 생성을 막거나 설정을 바꿀 수 있어요."},
+  subagent_delivery:{title:"subagent_delivery_target",desc:"서브에이전트에게 전달할 메시지의 대상을 정합니다."},
+  subagent_spawned:{title:"subagent_spawned",desc:"서브에이전트가 성공적으로 생성된 후 호출됩니다."},
+  subagent_ended:{title:"subagent_ended",desc:"서브에이전트의 작업이 끝났을 때 호출됩니다. 결과를 메인 에이전트에 전달해요."},
+  before_message_write:{title:"before_message_write",desc:"응답 메시지를 저장하기 직전입니다. 메시지 내용을 마지막으로 수정할 수 있어요."},
+  message_sending:{title:"message_sending",desc:"메시지를 플랫폼에 보내는 중입니다. 전송 방식을 커스터마이즈할 수 있어요."},
+  message_sent:{title:"message_sent",desc:"메시지 전송이 완료되었습니다. 전송 로그를 남기거나 알림을 보낼 수 있어요."},
+  agent_end:{title:"agent_end",desc:"에이전트의 이번 턴 처리가 끝났습니다. 정리 작업을 할 수 있어요."},
+  session_end:{title:"session_end",desc:"세션이 종료될 때 호출됩니다. 세션 데이터를 저장할 수 있어요."},
+  gateway_stop:{title:"gateway_stop",desc:"게이트웨이 서버가 종료될 때 호출됩니다. 외부 연결을 정리하세요."}
+};
+
+const hookPopup=document.getElementById("hook-popup");
+const hpTitle=document.getElementById("hp-title");
+const hpDesc=document.getElementById("hp-desc");
+window.hideHookPopup=function(){hookPopup.classList.remove("show")};
+
+document.querySelectorAll(".station").forEach(function(el){
+  el.addEventListener("click",function(e){
+    const key=this.dataset.hook;
+    const info=hookInfo[key];if(!info)return;
+    hpTitle.textContent=info.title;
+    hpDesc.textContent=info.desc;
+    const r=this.getBoundingClientRect();
+    let left=r.left-100,top=r.top-80;
+    if(left<10)left=10;if(left+300>window.innerWidth)left=window.innerWidth-310;
+    if(top<10)top=r.bottom+10;
+    hookPopup.style.left=left+"px";hookPopup.style.top=top+"px";
+    hookPopup.classList.add("show");
+    e.stopPropagation();
+  });
+});
+document.addEventListener("click",function(){hideHookPopup()});
+
+/* Train animation */
+const mainStops=[
+  {x:60,y:60},{x:160,y:60},{x:260,y:60},{x:360,y:60},{x:460,y:60},
+  {x:460,y:130},{x:460,y:200},{x:560,y:200},{x:660,y:200}
+];
+const toolStops=[{x:660,y:290},{x:760,y:290},{x:860,y:290},{x:860,y:200},{x:660,y:200}];
+const outputStops=[{x:660,y:380},{x:560,y:380},{x:460,y:380},{x:360,y:380},{x:260,y:380},{x:160,y:380},{x:60,y:380}];
+
+const trainDot=document.getElementById("train-dot");
+let trainRunning=false;
+
+function animateStops(stops,idx,cb){
+  if(idx>=stops.length){cb();return;}
+  const s=stops[idx];
+  trainDot.setAttribute("cx",s.x);trainDot.setAttribute("cy",s.y);
+  setTimeout(function(){animateStops(stops,idx+1,cb)},350);
+}
+
+document.getElementById("btn-train").addEventListener("click",function(){
+  if(trainRunning)return;
+  trainRunning=true;this.disabled=true;
+  trainDot.setAttribute("opacity","1");
+  const btn=this;
+  animateStops(mainStops,0,function(){
+    // Tool branch
+    animateStops(toolStops,0,function(){
+      // Output line
+      animateStops(outputStops,0,function(){
+        trainDot.setAttribute("opacity","0");
+        trainRunning=false;btn.disabled=false;
+      });
+    });
+  });
+});
+
+/* ─── Lesson 7: Quiz ─── */
+const quizzes=[
+  {q:"철수가 Slack DM으로 보낸 메시지",answer:0,options:["channel:account (DM)","channel:guild (Group)","channel:thread_id (Thread)","agent:global (Global)"],explain:"1:1 DM이므로 channel:account 형식의 세션 키가 사용됩니다."},
+  {q:"Discord 서버 '#일반' 채널에서 영희가 보낸 메시지",answer:1,options:["channel:account (DM)","channel:guild (Group)","channel:thread_id (Thread)","agent:global (Global)"],explain:"서버(길드) 채널이므로 channel:guild 형식입니다. 같은 서버 멤버끼리 대화를 공유해요."},
+  {q:"Slack 스레드에서 이어지는 대화",answer:2,options:["channel:account (DM)","channel:guild (Group)","channel:thread_id (Thread)","agent:global (Global)"],explain:"스레드 안의 대화이므로 channel:thread_id입니다. 스레드마다 별도 맥락을 유지해요."},
+  {q:"모든 사용자가 공유하는 공지 봇",answer:3,options:["channel:account (DM)","channel:guild (Group)","channel:thread_id (Thread)","agent:global (Global)"],explain:"모든 사용자에게 같은 상태를 공유하므로 agent:global입니다."},
+  {q:"Telegram에서 민수가 봇에게 직접 메시지를 보냄",answer:0,options:["channel:account (DM)","channel:guild (Group)","channel:thread_id (Thread)","agent:global (Global)"],explain:"1:1 직접 메시지이므로 channel:account입니다."}
+];
+let quizIdx=0;
+const scenarioEl=document.getElementById("quiz-scenario");
+const optionsEl=document.getElementById("quiz-options");
+const resultEl=document.getElementById("quiz-result");
+
+function renderQuiz(){
+  const q=quizzes[quizIdx%quizzes.length];
+  scenarioEl.textContent="상황: "+q.q;
+  resultEl.textContent="";
+  optionsEl.innerHTML="";
+  q.options.forEach(function(opt,i){
+    const btn=document.createElement("button");
+    btn.className="quiz-option";btn.textContent=opt;
+    btn.addEventListener("click",function(){
+      document.querySelectorAll(".quiz-option").forEach(function(b){b.disabled=true});
+      if(i===q.answer){
+        btn.classList.add("correct");
+        resultEl.textContent="정답입니다! "+q.explain;
+        resultEl.style.color="#276749";
+      }else{
+        btn.classList.add("wrong");
+        optionsEl.children[q.answer].classList.add("correct");
+        resultEl.textContent="아쉽네요! "+q.explain;
+        resultEl.style.color="#c53030";
+      }
+    });
+    optionsEl.appendChild(btn);
+  });
+}
+renderQuiz();
+document.getElementById("btn-next-quiz").addEventListener("click",function(){quizIdx++;renderQuiz()});
+
+})();
+</script>
+</body>
+</html>
